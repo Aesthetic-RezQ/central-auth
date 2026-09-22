@@ -1,0 +1,312 @@
+.bic-app {
+  min-height: 100vh;
+  display: flex;
+  background-color: var(--bic-bg-body);
+}
+
+.bic-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--bic-sidebar-width, 270px);
+  background: #ffffff !important;
+  color: #2a3547 !important;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e5eaef !important;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.03);
+  z-index: 1000;
+  transition: transform 0.25s ease-in-out;
+}
+
+.bic-brand {
+  height: var(--bic-topbar-height, 70px);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1.25rem;
+  color: #2a3547 !important;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  border-bottom: 1px solid #e5eaef !important;
+  background: #ffffff !important;
+}
+
+.bic-brand-logo-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 2px 8px;
+  background: #ffffff;
+  border-radius: var(--bic-radius-sm, 8px);
+  border: 1px solid #e5eaef;
+  flex-shrink: 0;
+}
+
+.bic-brand-mark {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--bic-radius-md, 8px);
+  background: #5d87ff;
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  box-shadow: var(--bic-shadow-sm);
+  flex-shrink: 0;
+}
+
+.bic-sidebar-logo {
+  display: block;
+  height: 26px;
+  width: auto;
+  max-width: 100px;
+  object-fit: contain;
+}
+
+.bic-brand-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2a3547 !important;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bic-nav {
+  flex: 1;
+  padding: 1rem 0.875rem;
+}
+
+.bic-sidebar-heading {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bic-space-3);
+  padding: var(--bic-space-3) 1rem 0;
+}
+
+.bic-nav-section {
+  padding: 1.25rem 0.875rem 0.5rem;
+  color: #64748b !important;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.bic-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.875rem;
+  margin-bottom: 4px;
+  border-radius: 8px;
+  border: 0;
+  color: #475569 !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s ease-in-out;
+}
+
+.bic-nav-link svg,
+.bic-nav-link .bic-icon {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  color: #64748b;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  transition: color 0.2s ease-in-out;
+}
+
+.bic-nav-link:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  text-decoration: none;
+}
+
+.bic-nav-link:hover svg,
+.bic-nav-link:hover .bic-icon {
+  color: #4361ee !important;
+  stroke: #4361ee !important;
+}
+
+.bic-nav-link.is-active {
+  background: #4361ee !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(67, 97, 238, 0.25);
+  text-decoration: none;
+}
+
+.bic-nav-link.is-active svg,
+.bic-nav-link.is-active .bic-icon {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.bic-main {
+  min-height: 100vh;
+  margin-left: var(--bic-sidebar-width);
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bic-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  height: var(--bic-topbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bic-space-4);
+  padding: 0 1.5rem;
+  background: #ffffff;
+  border-bottom: 1px solid var(--bic-border);
+  box-shadow: 0 0 2rem 0 rgba(33, 37, 41, 0.05);
+}
+
+.bic-content {
+  width: 100%;
+  max-width: var(--bic-content-max);
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem;
+  flex: 1;
+}
+
+.bic-topbar-label {
+  color: var(--bic-text-secondary);
+  font-size: var(--bic-font-size-sm);
+  font-weight: 500;
+}
+
+.bic-menu-toggle {
+  display: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 2.25rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.bic-sidebar-overlay {
+  display: none;
+}
+
+.bic-skip-link {
+  position: fixed;
+  top: var(--bic-space-3);
+  left: var(--bic-space-3);
+  z-index: 3000;
+  transform: translateY(-160%);
+}
+
+.bic-skip-link:focus { transform: translateY(0); }
+
+.bic-dropdown { position: relative; }
+.bic-dropdown > summary { list-style: none; }
+.bic-dropdown > summary::-webkit-details-marker { display: none; }
+
+.bic-dropdown-menu {
+  position: absolute;
+  top: calc(100% + var(--bic-space-2));
+  right: 0;
+  min-width: 220px;
+  padding: var(--bic-space-2) 0;
+  border: 1px solid var(--bic-border);
+  border-radius: var(--bic-radius-md);
+  background: var(--bic-bg-surface);
+  box-shadow: var(--bic-shadow-md);
+  z-index: 1200;
+}
+
+.bic-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--bic-space-4);
+  margin-bottom: 1.5rem;
+}
+
+.bic-page-title {
+  margin-bottom: 0.25rem;
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: var(--bic-text-primary);
+}
+
+.bic-page-subtitle {
+  margin: 0;
+  color: var(--bic-text-muted);
+  font-size: 0.875rem;
+}
+
+.bic-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.bic-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+.bic-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
+.bic-grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem; }
+
+@media (max-width: 1100px) {
+  .bic-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bic-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 768px) {
+  .bic-sidebar {
+    transform: translateX(-100%);
+  }
+
+  .bic-sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .bic-sidebar-heading { display: flex; }
+  .bic-menu-toggle { display: inline-flex; }
+
+  .bic-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    display: block;
+    border: 0;
+    background: rgba(34, 46, 60, 0.4);
+    backdrop-filter: blur(2px);
+    z-index: 999;
+  }
+
+  .bic-main {
+    margin-left: 0;
+  }
+
+  .bic-content {
+    padding: 1rem;
+  }
+
+  .bic-page-header {
+    flex-direction: column;
+  }
+
+  .bic-grid-2,
+  .bic-grid-3,
+  .bic-grid-4 {
+    grid-template-columns: 1fr;
+  }
+}

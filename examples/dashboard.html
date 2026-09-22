@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>BIC IT Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/bic-tokens.css">
+  <link rel="stylesheet" href="../css/bic-base.css">
+  <link rel="stylesheet" href="../css/bic-layout.css">
+  <link rel="stylesheet" href="../css/bic-components.css">
+  <link rel="stylesheet" href="../css/bic-utilities.css">
+</head>
+
+<body>
+<div class="bic-app">
+  <aside class="bic-sidebar">
+    <div class="bic-brand">
+      <div class="bic-brand-logo-wrap">
+        <img class="bic-sidebar-logo" src="/assets/bic-logo.jpg" alt="Batamindo Investment Cakrawala">
+      </div>
+      <span class="bic-brand-title">BIC Internal IT</span>
+    </div>
+
+    <nav class="bic-nav">
+      <div class="bic-nav-section">Overview</div>
+      <a href="#" class="bic-nav-link is-active">Dashboard</a>
+
+      <div class="bic-nav-section">Operations</div>
+      <a href="#" class="bic-nav-link">Devices</a>
+      <a href="#" class="bic-nav-link">Monitoring</a>
+      <a href="#" class="bic-nav-link">Incidents</a>
+      <a href="#" class="bic-nav-link">Projects</a>
+
+      <div class="bic-nav-section">Administration</div>
+      <a href="#" class="bic-nav-link">Users</a>
+      <a href="#" class="bic-nav-link">Settings</a>
+    </nav>
+  </aside>
+
+  <main class="bic-main">
+    <header class="bic-topbar">
+      <div class="bic-flex bic-items-center bic-gap-2">
+        <button class="bic-btn bic-btn-secondary bic-btn-sm" data-bic-toggle-sidebar>Menu</button>
+        <strong>IT Operations</strong>
+      </div>
+      <div class="bic-dropdown">
+        <button class="bic-identity bic-dropdown-toggle" type="button" aria-expanded="false" aria-haspopup="true">
+          <div class="bic-user-chip">
+            <div class="bic-user-avatar">R</div>
+            <div class="bic-user-info">
+              <strong class="bic-user-name">Rezki Saputra</strong>
+              <div class="bic-user-role-row">
+                <span class="bic-user-role">Administrator</span>
+                <svg class="bic-user-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </button>
+        <div class="bic-dropdown-menu">
+          <button class="bic-dropdown-item bic-dropdown-item-danger" type="button">
+            <svg class="bic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Sign out</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <section class="bic-content">
+      <div class="bic-page-header">
+        <div>
+          <h1 class="bic-page-title">Dashboard</h1>
+          <p class="bic-page-subtitle">Operational overview of internal IT services.</p>
+        </div>
+
+        <div class="bic-toolbar">
+          <button class="bic-btn bic-btn-secondary">Export</button>
+          <button class="bic-btn bic-btn-primary" data-bic-modal-open="newDeviceModal">Add Device</button>
+        </div>
+      </div>
+
+      <div class="bic-grid bic-grid-4 bic-mb-6">
+        <div class="bic-card bic-stat">
+          <div class="bic-stat-label">Total Devices</div>
+          <div class="bic-stat-value">245</div>
+          <div class="bic-stat-meta">Registered endpoints</div>
+        </div>
+
+        <div class="bic-card bic-stat">
+          <div class="bic-stat-label">Online</div>
+          <div class="bic-stat-value">231</div>
+          <div class="bic-stat-meta">94.3% available</div>
+        </div>
+
+        <div class="bic-card bic-stat">
+          <div class="bic-stat-label">Warning</div>
+          <div class="bic-stat-value">11</div>
+          <div class="bic-stat-meta">Require attention</div>
+        </div>
+
+        <div class="bic-card bic-stat">
+          <div class="bic-stat-label">Critical</div>
+          <div class="bic-stat-value">3</div>
+          <div class="bic-stat-meta">Immediate action</div>
+        </div>
+      </div>
+
+      <div class="bic-alert bic-alert-info">
+        Framework demo: this page uses only standard BIC UI classes.
+      </div>
+
+      <div class="bic-card bic-mb-6">
+        <div class="bic-card-header bic-flex bic-items-center bic-justify-between">
+          <div>
+            <h3 class="bic-mb-0">Recent Device Status</h3>
+            <div class="bic-text-sm bic-text-secondary">Latest infrastructure health</div>
+          </div>
+          <button class="bic-btn bic-btn-secondary bic-btn-sm">View All</button>
+        </div>
+
+        <div class="bic-table-wrap">
+          <table class="bic-table">
+            <thead>
+              <tr>
+                <th>Device</th>
+                <th>IP Address</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Last Check</th>
+                <th class="bic-text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>CORE-SW-01</td>
+                <td>172.16.0.10</td>
+                <td>Switch</td>
+                <td><span class="bic-badge bic-badge-success">Online</span></td>
+                <td>10 seconds ago</td>
+                <td class="bic-text-right"><button class="bic-btn bic-btn-secondary bic-btn-sm">Open</button></td>
+              </tr>
+              <tr>
+                <td>SRV-APP-01</td>
+                <td>172.16.0.21</td>
+                <td>Server</td>
+                <td><span class="bic-badge bic-badge-warning">Warning</span></td>
+                <td>22 seconds ago</td>
+                <td class="bic-text-right"><button class="bic-btn bic-btn-secondary bic-btn-sm">Open</button></td>
+              </tr>
+              <tr>
+                <td>OT-GW-03</td>
+                <td>172.16.10.3</td>
+                <td>OT Gateway</td>
+                <td><span class="bic-badge bic-badge-danger">Down</span></td>
+                <td>4 minutes ago</td>
+                <td class="bic-text-right"><button class="bic-btn bic-btn-secondary bic-btn-sm">Open</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bic-grid bic-grid-2">
+        <div class="bic-card">
+          <div class="bic-card-header">
+            <h3 class="bic-mb-0">Standard Form</h3>
+          </div>
+          <div class="bic-card-body">
+            <div class="bic-form-group">
+              <label class="bic-label">Device Name</label>
+              <input class="bic-control" placeholder="e.g. SW-ACCESS-01">
+            </div>
+
+            <div class="bic-form-group">
+              <label class="bic-label">Category</label>
+              <select class="bic-select">
+                <option>Switch</option>
+                <option>Server</option>
+                <option>Workstation</option>
+              </select>
+            </div>
+
+            <div class="bic-form-group">
+              <label class="bic-label">Description</label>
+              <textarea class="bic-textarea" placeholder="Optional notes"></textarea>
+              <div class="bic-help">Use operational, concise descriptions.</div>
+            </div>
+
+            <button class="bic-btn bic-btn-primary">Save</button>
+          </div>
+        </div>
+
+        <div class="bic-card">
+          <div class="bic-card-header">
+            <h3 class="bic-mb-0">Standard Alerts</h3>
+          </div>
+          <div class="bic-card-body">
+            <div class="bic-alert bic-alert-success">Backup completed successfully.</div>
+            <div class="bic-alert bic-alert-warning">Storage usage is above 80%.</div>
+            <div class="bic-alert bic-alert-danger">Server is unreachable.</div>
+            <div class="bic-alert bic-alert-info">Scheduled maintenance tonight.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="bic-modal-backdrop" id="newDeviceModal">
+  <div class="bic-modal">
+    <div class="bic-modal-header">
+      <h3 class="bic-mb-0">Add Device</h3>
+      <button class="bic-btn bic-btn-secondary bic-btn-sm" data-bic-modal-close>Close</button>
+    </div>
+    <div class="bic-modal-body">
+      <div class="bic-form-group">
+        <label class="bic-label">Device Name</label>
+        <input class="bic-control">
+      </div>
+      <div class="bic-form-group">
+        <label class="bic-label">IP Address</label>
+        <input class="bic-control" placeholder="172.16.x.x">
+      </div>
+    </div>
+    <div class="bic-modal-footer">
+      <button class="bic-btn bic-btn-secondary" data-bic-modal-close>Cancel</button>
+      <button class="bic-btn bic-btn-primary">Create</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/bic-ui.js"></script>
+</body>
+</html>

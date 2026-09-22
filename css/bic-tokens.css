@@ -1,0 +1,135 @@
+:root {
+  /* Brand - Balanced enterprise palette */
+  --bic-primary: #4361ee;
+  --bic-primary-hover: #374fc7;
+  --bic-primary-active: #2f44b0;
+  --bic-primary-soft: #eef2ff;
+  --bic-primary-soft-hover: #e0e7ff;
+  --bic-primary-text: #3538cd;
+  --bic-primary-border: #c7d2fe;
+  --bic-secondary: #0ea5e9;
+  --bic-secondary-hover: #0284c7;
+  --bic-secondary-soft: #f0f9ff;
+  --bic-accent: #059669;
+
+  /* Status - Calibrated background to foreground brightness ratios */
+  --bic-success: #10b981;
+  --bic-success-hover: #059669;
+  --bic-success-soft: #ecfdf5;
+  --bic-success-text: #027a48;
+  --bic-success-border: #a7f3d0;
+
+  --bic-warning: #f59e0b;
+  --bic-warning-hover: #d97706;
+  --bic-warning-soft: #fffbeb;
+  --bic-warning-text: #b45309;
+  --bic-warning-border: #fde68a;
+
+  --bic-danger: #ef4444;
+  --bic-danger-hover: #dc2626;
+  --bic-danger-soft: #fef2f2;
+  --bic-danger-text: #b91c1c;
+  --bic-danger-border: #fecaca;
+
+  --bic-info: #0ea5e9;
+  --bic-info-hover: #0284c7;
+  --bic-info-soft: #f0f9ff;
+  --bic-info-text: #0369a1;
+  --bic-info-border: #bae6fd;
+
+  /* Neutral surfaces - Clean modern light surfaces */
+  --bic-bg-body: #f4f6f9;
+  --bic-bg-surface: #ffffff;
+  --bic-bg-surface-muted: #f8fafc;
+  --bic-bg-sidebar: #ffffff;
+  --bic-bg-sidebar-hover: #f1f5f9;
+  --bic-bg-sidebar-active: #4361ee;
+  --bic-bg-muted: #f8fafc;
+
+  /* Text colors */
+  --bic-text-primary: #1e293b;
+  --bic-text-dark: #0f172a;
+  --bic-text-heading: #0f172a;
+  --bic-text-secondary: #475569;
+  --bic-text-muted: #64748b;
+  --bic-text-inverse: #ffffff;
+  --bic-text-sidebar: #334155;
+  --bic-text-sidebar-hover: #1e293b;
+  --bic-text-sidebar-active: #ffffff;
+  --bic-sidebar-link: #475569;
+  --bic-sidebar-link-hover: #1e293b;
+  --bic-sidebar-link-active: #ffffff;
+
+  /* Borders */
+  --bic-border: #e5eaef;
+  --bic-border-subtle: #f0f3f6;
+  --bic-border-strong: #dfe5ef;
+  --bic-border-focus: #5d87ff;
+
+  /* Typography - Tailwind-Admin DM Sans font stack */
+  --bic-font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --bic-font-size-xs: 0.75rem;     /* 12px */
+  --bic-font-size-sm: 0.8125rem;   /* 13px */
+  --bic-font-size-md: 0.875rem;    /* 14px */
+  --bic-font-size-base: 0.9375rem; /* 15px */
+  --bic-font-size-lg: 1.125rem;    /* 18px */
+  --bic-font-size-xl: 1.375rem;    /* 22px */
+  --bic-font-size-2xl: 1.75rem;    /* 28px */
+  --bic-line-height: 1.5;
+
+  /* Spacing: 4px scale */
+  --bic-space-1: 0.25rem;  /* 4px */
+  --bic-space-2: 0.5rem;   /* 8px */
+  --bic-space-3: 0.75rem;  /* 12px */
+  --bic-space-4: 1rem;     /* 16px */
+  --bic-space-5: 1.25rem;  /* 20px */
+  --bic-space-6: 1.5rem;   /* 24px */
+  --bic-space-8: 2rem;     /* 32px */
+  --bic-space-10: 2.5rem;  /* 40px */
+
+  /* Shape / Radii - Tailwind-Admin signature geometry */
+  --bic-radius-sm: 4px;
+  --bic-radius-md: 7px;
+  --bic-radius-lg: 10px;
+  --bic-radius-xl: 12px;
+  --bic-radius-2xl: 16px;
+  --bic-radius-pill: 9999px;
+
+  /* Shadows - Tailwind-Admin signature elevation */
+  --bic-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --bic-shadow-card: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
+  --bic-shadow-md: rgba(145, 158, 171, 0.2) 0px 0px 2px 0px, rgba(145, 158, 171, 0.12) 0px 12px 24px -4px;
+  --bic-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --bic-shadow-navbar: rgba(145, 158, 171, 0.12) 0px 2px 8px;
+  --bic-shadow-primary: 0 4px 12px rgba(93, 135, 255, 0.35);
+  --bic-shadow-danger: 0 4px 12px rgba(250, 137, 107, 0.35);
+  --bic-shadow-dropdown: 0 8px 24px rgba(145, 158, 171, 0.2);
+
+  /* Layout Dimensions */
+  --bic-sidebar-width: 270px;
+  --bic-topbar-height: 64px;
+  --bic-content-max: 1600px;
+  --bic-auth-max-width: 440px;
+  --bic-control-height: 38px;
+  --bic-table-row-height: 48px;
+
+  /* Transitions */
+  --bic-transition: 150ms ease-in-out;
+  --bic-backdrop: rgba(42, 53, 71, 0.45);
+
+  /* Semantic Aliases */
+  --bic-color-primary: var(--bic-primary);
+  --bic-color-primary-hover: var(--bic-primary-hover);
+  --bic-color-background: var(--bic-bg-body);
+  --bic-color-surface: var(--bic-bg-surface);
+  --bic-color-surface-muted: var(--bic-bg-surface-muted);
+  --bic-color-text-primary: var(--bic-text-primary);
+  --bic-color-text-secondary: var(--bic-text-secondary);
+  --bic-color-text-muted: var(--bic-text-muted);
+  --bic-color-border: var(--bic-border);
+  --bic-color-border-strong: var(--bic-border-strong);
+  --bic-color-success: var(--bic-success);
+  --bic-color-warning: var(--bic-warning);
+  --bic-color-danger: var(--bic-danger);
+  --bic-color-info: var(--bic-info);
+}

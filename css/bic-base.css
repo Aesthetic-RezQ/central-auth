@@ -1,0 +1,107 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--bic-font-family);
+  font-size: var(--bic-font-size-md);
+  font-weight: 400;
+  line-height: var(--bic-line-height);
+  color: var(--bic-text-primary);
+  background: var(--bic-bg-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  color: var(--bic-text-inverse);
+  background: var(--bic-primary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--bic-primary);
+  outline-offset: 2px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 var(--bic-space-3);
+  color: var(--bic-text-primary);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+h1 { font-size: var(--bic-font-size-2xl); font-weight: 700; }
+h2 { font-size: var(--bic-font-size-xl); font-weight: 600; }
+h3 { font-size: var(--bic-font-size-lg); font-weight: 600; }
+h4 { font-size: 16px; font-weight: 600; }
+h5 { font-size: var(--bic-font-size-md); font-weight: 600; }
+h6 { font-size: var(--bic-font-size-sm); font-weight: 600; }
+
+p {
+  margin: 0 0 var(--bic-space-4);
+}
+
+a {
+  color: var(--bic-primary);
+  text-decoration: none;
+  transition: color var(--bic-transition);
+}
+
+a:hover {
+  color: var(--bic-primary-hover);
+  text-decoration: underline;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--bic-border);
+  margin: var(--bic-space-6) 0;
+}
+
+code {
+  padding: 0.2em 0.4em;
+  border-radius: var(--bic-radius-sm);
+  background: var(--bic-bg-muted);
+  color: #d63384;
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.875em;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  opacity: .65;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
