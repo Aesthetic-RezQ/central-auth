@@ -670,13 +670,54 @@ async function deleteUser(userId) {
 async function renderDivisions() {
   const [divisions, users] = await Promise.all([api("/v1/admin/divisions"), api("/v1/admin/users")]);
   $("section-divisions").innerHTML =
-    "<div class='bic-page-header'><div><p class='bic-kicker'>ORGANIZATION DIRECTORY</p><h2 class='bic-page-title'>Divisions</h2><p class='bic-page-subtitle'>Manage the organizational divisions and designated division managers.</p></div><button id='new-division' class='bic-btn bic-btn-primary bic-btn-sm'>" + icon("plus") + " New division</button></div>" +
-    "<div class='bic-card bic-panel'><div class='bic-table-toolbar'><span class='bic-muted'>" + divisions.length + " divisions</span><span class='bic-help'>Deleting a division unassigns it from users; user accounts are not deleted.</span></div><div class='bic-table-wrap'><table class='bic-table bic-sortable'><thead><tr><th>Code</th><th>Name</th><th>Division Manager</th><th>Description</th><th data-sortable='false' class='bic-text-right'>Actions</th></tr></thead><tbody>" +
-    (divisions.map((division) => {
-      const mgrText = division.manager ? "<strong>" + esc(division.manager.full_name) + "</strong> <small class='bic-muted'>(" + esc(division.manager.email) + ")</small>" : "<span class='bic-muted'>Unassigned</span>";
-      return "<tr><td><strong>" + esc(division.code) + "</strong></td><td>" + esc(division.name) + "</td><td>" + mgrText + "</td><td>" + esc(division.description || "—") + "</td><td class='bic-text-right'><div class='bic-action-row bic-justify-end'><button class='bic-icon-action' data-edit-division='" + esc(division.id) + "' title='Modify division' aria-label='Modify division'>" + icon("edit") + "</button><button class='bic-icon-action bic-icon-action-danger' data-delete-division='" + esc(division.id) + "' title='Delete division' aria-label='Delete division'>" + icon("trash") + "</button></div></td></tr>";
-    }).join("") || "<tr><td colspan='5' class='bic-empty'>No divisions defined yet.</td></tr>") +
-    "</tbody></table></div></div>";
+    "<div class='bic-page-header'>" +
+      "<div>" +
+        "<p class='bic-kicker'>ORGANIZATION DIRECTORY</p>" +
+        "<h2 class='bic-page-title'>Divisions</h2>" +
+        "<p class='bic-page-subtitle'>Manage the organizational divisions and designated division managers.</p>" +
+      "</div>" +
+      "<button id='new-division' class='bic-btn bic-btn-primary bic-btn-sm'>" + icon("plus") + " New division</button>" +
+    "</div>" +
+    "<div class='bic-card bic-panel'>" +
+      "<div class='bic-table-toolbar'>" +
+        "<div class='bic-toolbar-meta'>" +
+          "<span class='bic-badge bic-badge-info'>" + divisions.length + " divisions</span>" +
+        "</div>" +
+        "<span class='bic-help'>Deleting a division unassigns it from users; user accounts are preserved.</span>" +
+      "</div>" +
+      "<div class='bic-table-wrap'>" +
+        "<table class='bic-table bic-sortable'>" +
+          "<thead>" +
+            "<tr>" +
+              "<th style='width:120px;'>Code</th>" +
+              "<th style='width:220px;'>Name</th>" +
+              "<th style='width:260px;'>Division Manager</th>" +
+              "<th>Description</th>" +
+              "<th data-sortable='false' class='bic-text-right' style='width:100px;'>Actions</th>" +
+            "</tr>" +
+          "</thead>" +
+          "<tbody>" +
+            (divisions.map((division) => {
+              const mgrText = division.manager
+                ? "<div class='bic-user-chip'><div class='bic-user-avatar bic-user-avatar-sm'>" + esc(getInitials(division.manager.full_name || division.manager.username)) + "</div><div><strong class='bic-user-name-title'>" + esc(division.manager.full_name) + "</strong><small class='bic-muted'>" + esc(division.manager.email) + "</small></div></div>"
+                : "<span class='bic-muted'>Unassigned</span>";
+              return "<tr>" +
+                "<td><span class='bic-employee-badge font-mono'><strong>" + esc(division.code) + "</strong></span></td>" +
+                "<td><strong class='bic-user-name-title'>" + esc(division.name) + "</strong></td>" +
+                "<td>" + mgrText + "</td>" +
+                "<td><span class='bic-muted'>" + esc(division.description || "—") + "</span></td>" +
+                "<td class='bic-text-right'>" +
+                  "<div class='bic-action-row bic-justify-end'>" +
+                    "<button class='bic-icon-action bic-action-edit' data-edit-division='" + esc(division.id) + "' title='Modify division' aria-label='Modify division'>" + icon("edit") + "</button>" +
+                    "<button class='bic-icon-action bic-action-delete' data-delete-division='" + esc(division.id) + "' title='Delete division' aria-label='Delete division'>" + icon("trash") + "</button>" +
+                  "</div>" +
+                "</td>" +
+              "</tr>";
+            }).join("") || "<tr><td colspan='5' class='bic-empty'>No divisions defined yet.</td></tr>") +
+          "</tbody>" +
+        "</table>" +
+      "</div>" +
+    "</div>";
   enableTableSorting($("section-divisions"));
   $("new-division").onclick = () => openDivisionForm(null, users);
   document.querySelectorAll("[data-edit-division]").forEach((button) => button.onclick = () => {
@@ -914,23 +955,57 @@ function openApplicationForm() {
 async function renderApplications() {
   const applications = await api("/v1/admin/applications");
   $("section-applications").innerHTML =
-    "<div class='bic-page-header'><div><p class='bic-kicker'>OIDC IDENTITY PROVIDER</p><h2 class='bic-page-title'>Applications &amp; OIDC Clients</h2><p class='bic-page-subtitle'>Manage registered OpenID Connect clients, allowed redirect URIs, OAuth 2.0 credentials, and token lifetimes.</p></div><button id='new-application' class='bic-btn bic-btn-primary bic-btn-sm'>" + icon("plus") + " Register application</button></div>" +
-    "<div class='bic-card bic-panel'><div class='bic-table-toolbar'><span class='bic-muted'>" + applications.length + " registered client application" + (applications.length === 1 ? "" : "s") + "</span></div>" +
-    "<div class='bic-table-wrap'><table class='bic-table bic-sortable'><thead><tr><th>Application</th><th>Client ID</th><th>Client Type</th><th>Redirect URIs</th><th>Status</th><th class='bic-text-right'>Actions</th></tr></thead><tbody>" +
-    applications.map((app) => {
-      const uriCount = (app.redirect_uris || []).length;
-      return "<tr>" +
-        "<td><div><strong>" + esc(app.name) + "</strong><br><span class='bic-app-tag' style='font-size:0.75rem;'>" + esc(app.code) + "</span></div></td>" +
-        "<td><code>" + esc(app.client_id || app.code.toLowerCase()) + "</code></td>" +
-        "<td><span class='bic-badge " + (app.client_type === "public" ? "bic-badge-warning" : "bic-badge-info") + "'>" + esc(app.client_type || "confidential") + "</span></td>" +
-        "<td><span class='bic-badge " + (uriCount > 0 ? "bic-badge-success" : "bic-badge-warning") + "'>" + uriCount + " registered</span></td>" +
-        "<td>" + statusBadge(app.status) + "</td>" +
-        "<td class='bic-text-right'>" +
-          "<button class='bic-btn bic-btn-secondary bic-btn-sm' data-configure-app='" + esc(app.id) + "' style='padding:0.25rem 0.6rem;font-size:0.75rem;'>" + icon("lock") + " Configure OIDC</button>" +
-        "</td>" +
-      "</tr>";
-    }).join("") +
-    "</tbody></table></div></div>";
+    "<div class='bic-page-header'>" +
+      "<div>" +
+        "<p class='bic-kicker'>OIDC IDENTITY PROVIDER</p>" +
+        "<h2 class='bic-page-title'>Applications &amp; OIDC Clients</h2>" +
+        "<p class='bic-page-subtitle'>Manage registered OpenID Connect clients, allowed redirect URIs, OAuth 2.0 credentials, and token lifetimes.</p>" +
+      "</div>" +
+      "<button id='new-application' class='bic-btn bic-btn-primary bic-btn-sm'>" + icon("plus") + " Register application</button>" +
+    "</div>" +
+    "<div class='bic-card bic-panel'>" +
+      "<div class='bic-table-toolbar'>" +
+        "<div class='bic-toolbar-meta'>" +
+          "<span class='bic-badge bic-badge-info'>" + applications.length + " registered client application" + (applications.length === 1 ? "" : "s") + "</span>" +
+        "</div>" +
+      "</div>" +
+      "<div class='bic-table-wrap'>" +
+        "<table class='bic-table bic-sortable'>" +
+          "<thead>" +
+            "<tr>" +
+              "<th style='width:240px;'>Application</th>" +
+              "<th style='width:180px;'>Client ID</th>" +
+              "<th style='width:140px;'>Client Type</th>" +
+              "<th style='width:160px;'>Redirect URIs</th>" +
+              "<th style='width:120px;'>Status</th>" +
+              "<th class='bic-text-right' style='width:140px;'>Actions</th>" +
+            "</tr>" +
+          "</thead>" +
+          "<tbody>" +
+            applications.map((app) => {
+              const uriCount = (app.redirect_uris || []).length;
+              return "<tr>" +
+                "<td>" +
+                  "<div class='bic-user-names'>" +
+                    "<strong class='bic-user-name-title'>" + esc(app.name) + "</strong>" +
+                    "<span class='bic-user-handle'><span class='bic-app-tag'>" + esc(app.code) + "</span></span>" +
+                  "</div>" +
+                "</td>" +
+                "<td><span class='bic-employee-badge font-mono'>" + esc(app.client_id || app.code.toLowerCase()) + "</span></td>" +
+                "<td><span class='bic-badge " + (app.client_type === "public" ? "bic-badge-warning" : "bic-badge-info") + "'>" + esc(app.client_type || "confidential") + "</span></td>" +
+                "<td><span class='bic-badge " + (uriCount > 0 ? "bic-badge-success" : "bic-badge-warning") + "'><span class='bic-badge-dot'></span>" + uriCount + " registered</span></td>" +
+                "<td>" + statusBadge(app.status) + "</td>" +
+                "<td class='bic-text-right'>" +
+                  "<div class='bic-action-row bic-justify-end'>" +
+                    "<button class='bic-btn bic-btn-secondary bic-btn-sm' data-configure-app='" + esc(app.id) + "' style='padding:0.25rem 0.6rem;font-size:0.75rem;'>" + icon("lock") + " Configure OIDC</button>" +
+                  "</div>" +
+                "</td>" +
+              "</tr>";
+            }).join("") +
+          "</tbody>" +
+        "</table>" +
+      "</div>" +
+    "</div>";
   enableTableSorting($("section-applications"));
   $("new-application").onclick = openApplicationForm;
 
@@ -1096,7 +1171,7 @@ function openApplicationConfigModal(app) {
                 "<tr>" +
                   "<td><code>" + esc(u.uri) + "</code></td>" +
                   "<td>" + (u.created_at ? new Date(u.created_at).toLocaleDateString() : "—") + "</td>" +
-                  "<td class='bic-text-right'><button class='bic-btn bic-btn-danger bic-btn-sm' data-del-uri='" + esc(u.id) + "' style='padding:0.2rem 0.5rem;font-size:0.7rem;'>Remove</button></td>" +
+                  "<td class='bic-text-right'><button class='bic-icon-action bic-action-delete' data-del-uri='" + esc(u.id) + "' title='Remove URI' aria-label='Remove URI'>" + icon("trash") + "</button></td>" +
                 "</tr>"
               ).join("") : "<tr><td colspan='3' class='bic-empty'>No redirect URIs registered. This client cannot initiate OIDC authorization flows until a valid callback URL is added.</td></tr>") +
             "</tbody>" +
@@ -1288,10 +1363,10 @@ function renderRBACRolesView(container, applications, roles, permissions, users)
         "<td>" + userBadge + "</td>" +
         "<td class='bic-text-right'>" +
           "<div class='bic-action-row bic-justify-end'>" +
-            "<button class='bic-icon-action' data-role-details='" + esc(r.id) + "' title='View role details & permissions' aria-label='View role details'>" + icon("eye") + "</button>" +
-            "<button class='bic-icon-action' data-role-edit='" + esc(r.id) + "' title='Edit role definition' aria-label='Edit role'>" + icon("edit") + "</button>" +
-            "<button class='bic-icon-action' data-role-clone='" + esc(r.id) + "' title='Clone role' aria-label='Clone role'>" + icon("copy") + "</button>" +
-            "<button class='bic-icon-action bic-icon-action-danger' data-role-delete='" + esc(r.id) + "' " + (r.is_system ? "disabled title='System roles cannot be deleted'" : "title='Delete role'") + " aria-label='Delete role'>" + icon("trash") + "</button>" +
+            "<button class='bic-icon-action bic-action-view' data-role-details='" + esc(r.id) + "' title='View role details & permissions' aria-label='View role details'>" + icon("eye") + "</button>" +
+            "<button class='bic-icon-action bic-action-edit' data-role-edit='" + esc(r.id) + "' title='Edit role definition' aria-label='Edit role'>" + icon("edit") + "</button>" +
+            "<button class='bic-icon-action bic-action-key' data-role-clone='" + esc(r.id) + "' title='Clone role' aria-label='Clone role'>" + icon("copy") + "</button>" +
+            "<button class='bic-icon-action bic-action-delete' data-role-delete='" + esc(r.id) + "' " + (r.is_system ? "disabled title='System roles cannot be deleted'" : "title='Delete role'") + " aria-label='Delete role'>" + icon("trash") + "</button>" +
           "</div>" +
         "</td>" +
       "</tr>";
@@ -1374,8 +1449,8 @@ function renderRBACMatrixView(container, applications, roles, permissions) {
               const permRows = perms.map((p) => {
                 return "<tr>" +
                   "<td class='bic-matrix-sticky-col'>" +
-                    "<div><code>" + esc(p.code) + "</code></div>" +
-                    "<small class='bic-muted'>" + esc(p.description || "") + "</small>" +
+                    "<div><span class='bic-employee-badge font-mono'><strong>" + esc(p.code) + "</strong></span></div>" +
+                    "<small class='bic-muted' style='margin-top:0.25rem;display:block;'>" + esc(p.description || "") + "</small>" +
                   "</td>" +
                   appRoles.map((r) => {
                     const hasPerm = (r.permissions || []).includes(p.code);
@@ -1416,11 +1491,11 @@ function renderRBACPermissionsView(container, applications, permissions, roles) 
         "<table class='bic-table bic-sortable' id='rbac-perms-table'>" +
           "<thead>" +
             "<tr>" +
-              "<th>Permission Code</th>" +
-              "<th>Module</th>" +
-              "<th>Application</th>" +
+              "<th style='width:220px;'>Permission Code</th>" +
+              "<th style='width:140px;'>Module</th>" +
+              "<th style='width:140px;'>Application</th>" +
               "<th>Description</th>" +
-              "<th>Granted in Roles</th>" +
+              "<th style='width:200px;'>Granted in Roles</th>" +
             "</tr>" +
           "</thead>" +
           "<tbody id='rbac-perms-tbody'></tbody>" +
@@ -1438,7 +1513,7 @@ function renderRBACPermissionsView(container, applications, permissions, roles) 
     $("rbac-perms-tbody").innerHTML = filtered.length ? filtered.map((p) => {
       const roleBadges = (p.roles || []).length ? p.roles.map((r) => "<span class='bic-badge bic-badge-primary'>" + esc(r) + "</span>").join(" ") : "<span class='bic-muted'>None</span>";
       return "<tr>" +
-        "<td><code>" + esc(p.code) + "</code></td>" +
+        "<td><span class='bic-employee-badge font-mono'><strong>" + esc(p.code) + "</strong></span></td>" +
         "<td><span class='bic-badge bic-badge-info'>" + esc(p.module || "General") + "</span></td>" +
         "<td><span class='bic-app-tag'>" + esc(p.application_code) + "</span></td>" +
         "<td>" + esc(p.description || "—") + "</td>" +
@@ -1605,7 +1680,7 @@ async function openRoleDetailsModal(roleId, applications, allPermissions, allUse
                     "<td>" + esc(u.division_name || "—") + " / " + esc(u.position_name || "—") + "</td>" +
                     "<td>" + statusBadge(u.status) + "</td>" +
                     "<td class='bic-text-right'>" +
-                      "<button class='bic-btn bic-btn-danger bic-btn-sm' data-remove-user-role='" + esc(u.id) + "' style='padding:0.2rem 0.5rem;font-size:0.7rem;'>Remove</button>" +
+                      "<button class='bic-icon-action bic-action-delete' data-remove-user-role='" + esc(u.id) + "' title='Remove user from role' aria-label='Remove user'>" + icon("trash") + "</button>" +
                     "</td>" +
                   "</tr>"
                 ).join("") : "<tr><td colspan='5' class='bic-empty'>No users assigned to this role yet.</td></tr>") +
@@ -1990,7 +2065,13 @@ async function renderAudit() {
   const appOptions = "<option value=''>All Applications</option>" + applications.map((a) => "<option value='" + esc(a.code) + "'>" + esc(a.name) + "</option>").join("");
 
   $("section-audit").innerHTML =
-    "<div class='bic-page-header'><div><p class='bic-kicker'>GOVERNANCE</p><h2 class='bic-page-title'>Audit log</h2><p class='bic-page-subtitle'>Immutable event ledger tracking logins, synchronization queries, and security actions.</p></div></div>" +
+    "<div class='bic-page-header'>" +
+      "<div>" +
+        "<p class='bic-kicker'>GOVERNANCE &amp; COMPLIANCE</p>" +
+        "<h2 class='bic-page-title'>Audit log</h2>" +
+        "<p class='bic-page-subtitle'>Immutable event ledger tracking logins, synchronization queries, and security actions.</p>" +
+      "</div>" +
+    "</div>" +
     "<div class='bic-card bic-panel'>" +
       "<div class='bic-table-toolbar'>" +
         "<div class='bic-toolbar-filter-group'>" +
@@ -2002,7 +2083,20 @@ async function renderAudit() {
         "</div>" +
         "<div class='bic-toolbar-meta'><span class='bic-badge bic-badge-info'>" + logs.length + " events</span></div>" +
       "</div>" +
-      "<div class='bic-table-wrap'><table class='bic-table bic-sortable'><thead><tr><th>Event</th><th>Application</th><th>Source IP</th><th data-sort-type='date'>Timestamp</th><th>Metadata</th></tr></thead><tbody id='audit-table-body'></tbody></table></div>" +
+      "<div class='bic-table-wrap'>" +
+        "<table class='bic-table bic-sortable'>" +
+          "<thead>" +
+            "<tr>" +
+              "<th style='width:200px;'>Event</th>" +
+              "<th style='width:140px;'>Application</th>" +
+              "<th style='width:140px;'>Source IP</th>" +
+              "<th style='width:180px;' data-sort-type='date'>Timestamp</th>" +
+              "<th>Metadata</th>" +
+            "</tr>" +
+          "</thead>" +
+          "<tbody id='audit-table-body'></tbody>" +
+        "</table>" +
+      "</div>" +
     "</div>";
 
   const renderAuditRows = () => {
@@ -2020,11 +2114,11 @@ async function renderAudit() {
       const isFailed = log.event.includes("FAILED") || log.event.includes("DELETED") || log.event.includes("DISABLED");
       const badgeClass = isSuccess ? "bic-badge-success" : (isFailed ? "bic-badge-danger" : "bic-badge-info");
       return "<tr>" +
-        "<td><span class='bic-badge " + badgeClass + "'>" + esc(log.event) + "</span></td>" +
+        "<td><span class='bic-badge " + badgeClass + "'><span class='bic-badge-dot'></span>" + esc(log.event) + "</span></td>" +
         "<td>" + (log.application ? "<span class='bic-app-tag'>" + esc(log.application) + "</span>" : "<span class='bic-muted'>—</span>") + "</td>" +
-        "<td><code>" + esc(log.source_ip || "—") + "</code></td>" +
-        "<td data-sort-value='" + esc(log.timestamp) + "'>" + new Date(log.timestamp).toLocaleString() + "</td>" +
-        "<td><pre class='bic-audit-metadata' style='margin:0;font-size:0.75rem;max-width:320px;overflow:hidden;text-overflow:ellipsis;'>" + esc(JSON.stringify(log.metadata || {})) + "</pre></td>" +
+        "<td><span class='bic-employee-badge font-mono'>" + esc(log.source_ip || "—") + "</span></td>" +
+        "<td data-sort-value='" + esc(log.timestamp) + "'><span class='bic-date-cell'>" + new Date(log.timestamp).toLocaleString(undefined, {month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit'}) + "</span></td>" +
+        "<td><pre class='bic-audit-metadata' style='margin:0;font-size:0.75rem;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,monospace;color:var(--bic-text-secondary);'>" + esc(JSON.stringify(log.metadata || {})) + "</pre></td>" +
       "</tr>";
     }).join("") : "<tr><td colspan='5' class='bic-empty'>No audit logs matching query.</td></tr>";
   };
