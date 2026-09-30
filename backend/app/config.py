@@ -28,9 +28,18 @@ class Settings(BaseSettings):
     smtp_from_email: str | None = None
     smtp_from_name: str = "Central Authentication Service"
     smtp_use_tls: bool = True
-    smtp_use_ssl: bool = False
     connection_check_timeout_seconds: float = 3.0
     connection_check_verify_tls: bool = True
+
+    # OIDC IdP & SSO Configuration
+    oidc_issuer: str = "http://localhost:8080"
+    sso_session_expire_hours: int = 8
+    authorization_code_expire_seconds: int = 60
+    sso_cookie_name: str = "central_auth_sso"
+    sso_cookie_secure: bool = False
+    sso_cookie_samesite: str = "lax"
+    sso_cookie_domain: str | None = None
+
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
 
     @property

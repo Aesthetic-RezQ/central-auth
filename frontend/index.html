@@ -10,12 +10,12 @@
   <link rel="apple-touch-icon" href="/assets/bic-logo.jpg?v=20260922-v3">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/bic-tokens.css?v=20260922-v4">
-  <link rel="stylesheet" href="/css/bic-base.css?v=20260922-v4">
-  <link rel="stylesheet" href="/css/bic-layout.css?v=20260922-v4">
-  <link rel="stylesheet" href="/css/bic-components.css?v=20260922-v4">
-  <link rel="stylesheet" href="/css/bic-utilities.css?v=20260922-v4">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/bic-tokens.css?v=20260930-tabler-v2">
+  <link rel="stylesheet" href="/css/bic-base.css?v=20260930-tabler-v2">
+  <link rel="stylesheet" href="/css/bic-layout.css?v=20260930-tabler-v2">
+  <link rel="stylesheet" href="/css/bic-components.css?v=20260930-tabler-v2">
+  <link rel="stylesheet" href="/css/bic-utilities.css?v=20260930-tabler-v2">
 </head>
 <body>
   <div id="app">
@@ -76,58 +76,66 @@
     <div id="modal-root"></div>
 
     <section id="portal-view" class="bic-app bic-hidden">
-      <aside id="primary-navigation" class="bic-sidebar">
-        <div class="bic-brand">
-          <div class="bic-brand-logo-wrap">
-            <img class="bic-sidebar-logo" src="/assets/bic-logo.jpg" alt="Batamindo Investment Cakrawala">
-          </div>
-          <span class="bic-brand-title">Central Auth</span>
-        </div>
-        <nav class="bic-nav">
-          <div class="bic-nav-section">Workspace</div>
-          <button class="bic-nav-link is-active" data-section="overview">
-            <svg class="bic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
-            <span>Overview</span>
-          </button>
-          <button class="bic-nav-link" data-section="users">
-            <svg class="bic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            <span>Users</span>
-          </button>
-          <button class="bic-nav-link" data-section="divisions">
-            <svg class="bic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-            <span>Divisions</span>
-          </button>
-          <button class="bic-nav-link" data-section="applications">
-            <svg class="bic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><line x1="2" x2="22" y1="7" y2="7"/></svg>
-            <span>Applications</span>
-          </button>
-          <button class="bic-nav-link" data-section="rbac">
-            <svg class="bic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <span>Roles & permissions</span>
-          </button>
-          <button class="bic-nav-link" data-section="audit">
-            <svg class="bic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
-            <span>Audit log</span>
-          </button>
-        </nav>
-      </aside>
-      <main class="bic-main">
-        <header class="bic-topbar">
-          <div class="bic-flex bic-items-center"><div><p class="bic-kicker">CENTRAL AUTHENTICATION SERVICE</p><h2 id="page-title" class="bic-page-title">Overview</h2></div></div>
-          <div class="bic-dropdown">
-            <button id="identity" class="bic-identity bic-dropdown-toggle" type="button" aria-expanded="false" aria-haspopup="true"></button>
-            <div class="bic-dropdown-menu" id="user-dropdown-menu">
-              <button id="logout-button" class="bic-dropdown-item bic-dropdown-item-danger" type="button">
-                <svg class="bic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                  <polyline points="16 17 21 12 16 7"></polyline>
-                  <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-                <span>Sign out</span>
-              </button>
+      <header class="bic-navbar">
+        <div class="bic-navbar-container">
+          <div class="bic-navbar-left">
+            <button class="bic-menu-toggle" type="button" aria-label="Toggle navigation" data-bic-toggle-menu>
+              <svg class="bic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            </button>
+            <div class="bic-brand">
+              <div class="bic-brand-logo-wrap">
+                <img class="bic-brand-logo" src="/assets/bic-logo.jpg" alt="Batamindo Investment Cakrawala">
+              </div>
+              <span class="bic-brand-title">Central Auth</span>
             </div>
           </div>
-        </header>
+
+          <nav id="primary-navigation" class="bic-nav-horizontal">
+            <button class="bic-nav-link is-active" data-section="overview">
+              <svg class="bic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+              <span>Overview</span>
+            </button>
+            <button class="bic-nav-link" data-section="users">
+              <svg class="bic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <span>Users</span>
+            </button>
+            <button class="bic-nav-link" data-section="divisions">
+              <svg class="bic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              <span>Divisions</span>
+            </button>
+            <button class="bic-nav-link" data-section="applications">
+              <svg class="bic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><line x1="2" x2="22" y1="7" y2="7"/></svg>
+              <span>Applications</span>
+            </button>
+            <button class="bic-nav-link" data-section="rbac">
+              <svg class="bic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Roles & permissions</span>
+            </button>
+            <button class="bic-nav-link" data-section="audit">
+              <svg class="bic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
+              <span>Audit log</span>
+            </button>
+          </nav>
+
+          <div class="bic-navbar-right">
+            <div class="bic-dropdown">
+              <button id="identity" class="bic-identity bic-dropdown-toggle" type="button" aria-expanded="false" aria-haspopup="true"></button>
+              <div class="bic-dropdown-menu" id="user-dropdown-menu">
+                <button id="logout-button" class="bic-dropdown-item bic-dropdown-item-danger" type="button">
+                  <svg class="bic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                  </svg>
+                  <span>Sign out</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="bic-main">
         <div class="bic-content">
           <div id="toast" class="bic-alert bic-alert-success bic-hidden" role="status" aria-live="polite"></div>
           <section id="section-overview" class="portal-section"></section>
@@ -140,7 +148,7 @@
       </main>
     </section>
   </div>
-  <script src="/app.js?v=20260922-v4"></script>
-  <script src="/js/bic-ui.js?v=20260922-v4"></script>
+  <script src="/app.js?v=20260930-tabler-v2"></script>
+  <script src="/js/bic-ui.js?v=20260930-tabler-v2"></script>
 </body>
 </html>

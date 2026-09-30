@@ -41,8 +41,23 @@ const getInitials = (name) => (String(name || "").trim().charAt(0) || "U").toUpp
 
 const statusBadge = (status) => {
   const type = status === "active" ? "success" : status === "disabled" ? "danger" : "warning";
-  return "<span class='bic-badge bic-badge-" + type + "'>" + esc(status) + "</span>";
+  const label = status === "active" ? "Active" : status === "disabled" ? "Disabled" : "Locked";
+  return "<span class='bic-badge bic-badge-" + type + "'><span class='bic-badge-dot'></span>" + esc(label) + "</span>";
 };
+
+const orgRoleBadge = (user) => {
+  if (user.is_superadmin || user.org_role === "system_administrator") {
+    return "<span class='bic-badge bic-badge-purple' title='System Administrator / Super Admin'>System Administrator</span>";
+  }
+  if (user.position?.is_general_manager || user.org_role === "general_manager") {
+    return "<span class='bic-badge bic-badge-warning' title='Executive General Manager'>General Manager</span>";
+  }
+  if (user.position?.is_manager || user.org_role === "manager") {
+    return "<span class='bic-badge bic-badge-primary' title='Department / Division Manager'>Manager</span>";
+  }
+  return "<span class='bic-badge bic-badge-info' title='Standard Employee'>Employee</span>";
+};
+
 const icon = (name) => {
   const paths = {
     eye: "<path d='M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z'/><circle cx='12' cy='12' r='2.5'/>",
@@ -50,6 +65,15 @@ const icon = (name) => {
     trash: "<path d='M4 7h16'/><path d='M10 11v5M14 11v5'/><path d='m6 7 1 13h10l1-13M9 7V4h6v3'/>",
     plus: "<path d='M12 5v14M5 12h14'/>",
     refresh: "<path d='M20 11a8 8 0 0 0-14.7-3L3 11'/><path d='M3 5v6h6'/><path d='M4 13a8 8 0 0 0 14.7 3L21 13'/><path d='M21 19v-6h-6'/>",
+    copy: "<rect width='14' height='14' x='8' y='8' rx='2' ry='2'/><path d='M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2'/>",
+    shield: "<path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/>",
+    check: "<polyline points='20 6 9 17 4 12'/>",
+    users: "<path d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M22 21v-2a4 4 0 0 0-3-3.87'/><path d='M16 3.13a4 4 0 0 1 0 7.75'/>",
+    lock: "<rect width='18' height='11' x='3' y='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/>",
+    matrix: "<rect width='18' height='18' x='3' y='3' rx='2'/><path d='M3 9h18M3 15h18M9 3v18M15 3v18'/>",
+    grid: "<rect width='7' height='7' x='3' y='3' rx='1'/><rect width='7' height='7' x='14' y='3' rx='1'/><rect width='7' height='7' x='14' y='14' rx='1'/><rect width='7' height='7' x='3' y='14' rx='1'/>",
+    key: "<circle cx='7.5' cy='15.5' r='5.5'/><path d='m21 2-9.6 9.6M15.5 7.5l3 3M18.5 4.5l3 3'/>",
+    info: "<circle cx='12' cy='12' r='10'/><line x1='12' y1='16' x2='12' y2='12'/><line x1='12' y1='8' x2='12.01' y2='8'/>",
   };
   return "<svg class='bic-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'>" + (paths[name] || "") + "</svg>";
 };
@@ -139,7 +163,8 @@ async function showSection(name) {
   document.querySelectorAll(".portal-section").forEach((section) => section.classList.add("bic-hidden"));
   document.querySelectorAll(".bic-nav-link").forEach((link) => link.classList.toggle("is-active", link.dataset.section === name));
   $("section-" + name).classList.remove("bic-hidden");
-  $("page-title").textContent = name === "rbac" ? "Roles & permissions" : name[0].toUpperCase() + name.slice(1);
+  const pageTitle = $("page-title");
+  if (pageTitle) pageTitle.textContent = name === "rbac" ? "Roles & permissions" : name[0].toUpperCase() + name.slice(1);
   if (name === "overview") await renderOverview();
   if (name === "users") await renderUsers();
   if (name === "divisions") await renderDivisions();
@@ -147,6 +172,7 @@ async function showSection(name) {
   if (name === "rbac") await renderRBAC();
   if (name === "audit") await renderAudit();
 }
+
 
 async function renderOverview() {
   const results = await Promise.all([api("/v1/admin/dashboard"), api("/v1/admin/application-status")]);
@@ -159,6 +185,7 @@ async function renderOverview() {
     ["Applications", data.registered_applications, "applications", "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7'/><path d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8'/><line x1='2' x2='22' y1='7' y2='7'/></svg>"]
   ];
   $("section-overview").innerHTML =
+    "<div class='bic-page-header'><div><p class='bic-kicker'>CENTRAL IDENTITY PLATFORM</p><h2 class='bic-page-title'>Overview</h2><p class='bic-page-subtitle'>High-level metrics, active directory health, and recent authentication activity.</p></div></div>" +
     "<div class='bic-kpi-grid'>" + metrics.map((item) =>
       "<div class='bic-card bic-stat'>" +
         "<div class='bic-stat-content'>" +
@@ -191,7 +218,7 @@ function activityTable(rows) {
     "</tbody></table></div>";
 }
 
-const USER_CSV_FIELDS = ["username", "email", "full_name", "division", "status", "is_superadmin", "applications", "roles", "password"];
+const USER_CSV_FIELDS = ["username", "employee_id", "email", "full_name", "division", "position", "status", "is_superadmin", "applications", "roles", "password"];
 
 function csvEscape(value) {
   const text = String(value ?? "");
@@ -205,13 +232,15 @@ function downloadUsersCsv(users) {
   users.forEach((user) => {
     const applications = user.is_superadmin
       ? "ALL"
-      : user.applications.map((application) => application.code).join(";");
-    const roles = user.roles.map((role) => role.application_code + ":" + role.name).join(";");
+      : (user.applications || []).map((application) => application.code).join(";");
+    const roles = (user.roles || []).map((role) => role.application_code + ":" + role.name).join(";");
     rows.push(csvRow([
       user.username,
+      user.employee_id || "",
       user.email,
       user.full_name,
       user.division?.code || "",
+      user.position?.code || "",
       user.status,
       user.is_superadmin ? "true" : "false",
       applications,
@@ -259,7 +288,7 @@ function csvList(value) {
   return String(value || "").split(";").map((item) => item.trim()).filter(Boolean);
 }
 
-async function syncImportedUser(user, row, applications, roles, divisions, isNew) {
+async function syncImportedUser(user, row, applications, roles, divisions, positions, isNew) {
   const status = String(row.status || "active").trim().toLowerCase();
   if (!["active", "disabled", "locked"].includes(status)) throw new Error("status must be active, disabled, or locked");
   const isSuperadmin = parseCsvBoolean(row.is_superadmin);
@@ -282,16 +311,46 @@ async function syncImportedUser(user, row, applications, roles, divisions, isNew
     requestedRoles.set(String(role.id), role);
     requestedAppCodes.add(role.application_code.toUpperCase());
   });
+
   const divisionValue = String(row.division || "").trim().toLowerCase();
   const division = divisionValue ? divisions.find((candidate) => candidate.code.toLowerCase() === divisionValue || candidate.name.toLowerCase() === divisionValue) : null;
   if (divisionValue && !division) throw new Error("unknown division: " + row.division);
 
+  const positionValue = String(row.position || "").trim().toLowerCase();
+  const position = positionValue ? positions.find((candidate) => candidate.code.toLowerCase() === positionValue || candidate.name.toLowerCase() === positionValue) : null;
+  if (positionValue && !position) throw new Error("unknown position: " + row.position);
+
+  const employeeId = String(row.employee_id || "").trim() || null;
+
   if (isNew) {
     const password = String(row.password || "");
     if (password.length < 12) throw new Error("new users require a password of at least 12 characters");
-    user = await api("/v1/admin/users", {method:"POST", body:JSON.stringify({username:row.username.trim(), email:row.email.trim(), full_name:row.full_name.trim(), password, is_superadmin:isSuperadmin, division_id:division?.id || null})});
+    user = await api("/v1/admin/users", {
+      method: "POST",
+      body: JSON.stringify({
+        username: row.username.trim(),
+        employee_id: employeeId,
+        email: row.email.trim(),
+        full_name: row.full_name.trim(),
+        password,
+        is_superadmin: isSuperadmin,
+        division_id: division?.id || null,
+        position_id: position?.id || null,
+      })
+    });
   } else {
-    user = await api("/v1/admin/users/" + user.id, {method:"PUT", body:JSON.stringify({email:row.email.trim(), full_name:row.full_name.trim(), status, is_superadmin:isSuperadmin, division_id:division?.id || null})});
+    user = await api("/v1/admin/users/" + user.id, {
+      method: "PUT",
+      body: JSON.stringify({
+        email: row.email.trim(),
+        full_name: row.full_name.trim(),
+        employee_id: employeeId,
+        status,
+        is_superadmin: isSuperadmin,
+        division_id: division?.id || null,
+        position_id: position?.id || null,
+      })
+    });
     if (row.password && String(row.password).length) await api("/v1/admin/users/" + user.id + "/reset-password", {method:"POST", body:JSON.stringify({password:String(row.password)})});
   }
   if (isNew && status !== "active") await api("/v1/admin/users/" + user.id, {method:"PUT", body:JSON.stringify({status})});
@@ -317,7 +376,13 @@ async function importUsersCsv(file) {
   if (rows.length > 501) throw new Error("Import is limited to 500 users per file");
   const header = rows[0].map((value) => value.trim().replace(/^\uFEFF/, ""));
   if (header.length !== USER_CSV_FIELDS.length || header.some((value, index) => value !== USER_CSV_FIELDS[index])) throw new Error("CSV header must be: " + USER_CSV_FIELDS.join(","));
-  const [applications, roles, divisions, existingUsers] = await Promise.all([api("/v1/admin/applications"), api("/v1/admin/roles"), api("/v1/admin/divisions"), api("/v1/admin/users")]);
+  const [applications, roles, divisions, positions, existingUsers] = await Promise.all([
+    api("/v1/admin/applications"),
+    api("/v1/admin/roles"),
+    api("/v1/admin/divisions"),
+    api("/v1/admin/positions"),
+    api("/v1/admin/users")
+  ]);
   const usersByUsername = new Map(existingUsers.map((user) => [user.username.toLowerCase(), user]));
   const usersByEmail = new Map(existingUsers.map((user) => [user.email.toLowerCase(), user]));
   let imported = 0;
@@ -332,7 +397,7 @@ async function importUsersCsv(file) {
       const existing = usersByUsername.get(row.username.toLowerCase());
       const emailOwner = usersByEmail.get(row.email.toLowerCase());
       if (emailOwner && (!existing || emailOwner.id !== existing.id)) throw new Error("email belongs to another user");
-      const importedUser = await syncImportedUser(existing, row, applications, roles, divisions, !existing);
+      const importedUser = await syncImportedUser(existing, row, applications, roles, divisions, positions, !existing);
       usersByUsername.set(row.username.toLowerCase(), importedUser);
       usersByEmail.set(row.email.toLowerCase(), importedUser);
       imported += 1;
@@ -344,15 +409,21 @@ async function importUsersCsv(file) {
 }
 
 async function renderUsers() {
-  const [users, divisions] = await Promise.all([api("/v1/admin/users"), api("/v1/admin/divisions")]);
+  const [users, divisions, positions] = await Promise.all([
+    api("/v1/admin/users"),
+    api("/v1/admin/divisions"),
+    api("/v1/admin/positions"),
+  ]);
+  
   const divisionOptions = "<option value=''>All Divisions</option>" + divisions.map((d) => "<option value='" + esc(d.name) + "'>" + esc(d.name) + "</option>").join("");
+  const positionOptions = "<option value=''>All Positions</option>" + positions.map((p) => "<option value='" + esc(p.name) + "'>" + esc(p.name) + "</option>").join("");
 
   $("section-users").innerHTML =
     "<div class='bic-page-header'>" +
       "<div>" +
         "<p class='bic-kicker'>IDENTITY DIRECTORY</p>" +
         "<h2 class='bic-page-title'>Users</h2>" +
-        "<p class='bic-page-subtitle'>Manage identities, application access, and assigned roles.</p>" +
+        "<p class='bic-page-subtitle'>Master directory of internal employee identities, organizational hierarchy, and application access.</p>" +
       "</div>" +
       "<div class='bic-action-row'>" +
         "<input id='users-import-file' class='bic-hidden' type='file' accept='.csv,text/csv'>" +
@@ -366,9 +437,23 @@ async function renderUsers() {
         "<div class='bic-toolbar-filter-group'>" +
           "<div class='bic-search-input-wrap'>" +
             "<svg class='bic-search-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>" +
-            "<input class='bic-control bic-search-control' id='users-search' type='search' placeholder='Search by name, username, email, role...' aria-label='Search users'>" +
+            "<input class='bic-control bic-search-control' id='users-search' type='search' placeholder='Search by name, employee ID, email, role...' aria-label='Search users'>" +
           "</div>" +
           "<select class='bic-select bic-filter-select' id='users-division-filter' aria-label='Filter by division'>" + divisionOptions + "</select>" +
+          "<select class='bic-select bic-filter-select' id='users-position-filter' aria-label='Filter by position'>" + positionOptions + "</select>" +
+          "<select class='bic-select bic-filter-select' id='users-org-role-filter' aria-label='Filter by org role'>" +
+            "<option value=''>All Org Roles</option>" +
+            "<option value='system_administrator'>System Administrator</option>" +
+            "<option value='general_manager'>General Manager</option>" +
+            "<option value='manager'>Manager</option>" +
+            "<option value='employee'>Employee</option>" +
+          "</select>" +
+          "<select class='bic-select bic-filter-select' id='users-status-filter' aria-label='Filter by status'>" +
+            "<option value=''>All Statuses</option>" +
+            "<option value='active'>Active</option>" +
+            "<option value='disabled'>Disabled</option>" +
+            "<option value='locked'>Locked</option>" +
+          "</select>" +
         "</div>" +
         "<div class='bic-toolbar-meta'>" +
           "<span class='bic-badge bic-badge-info'>" + users.length + " identities</span>" +
@@ -378,14 +463,15 @@ async function renderUsers() {
         "<table class='bic-table bic-sortable bic-users-table'>" +
           "<thead>" +
             "<tr>" +
-              "<th>User</th>" +
-              "<th>Email</th>" +
-              "<th>Division</th>" +
-              "<th>Status</th>" +
-              "<th>Applications</th>" +
-              "<th>Roles</th>" +
-              "<th data-sort-type='date'>Last login</th>" +
-              "<th data-sortable='false' class='bic-text-right'>Actions</th>" +
+              "<th class='col-user'>User</th>" +
+              "<th class='col-employee-id'>Employee ID</th>" +
+              "<th class='col-division'>Division</th>" +
+              "<th class='col-position'>Position</th>" +
+              "<th class='col-org-role'>Org Role</th>" +
+              "<th class='col-status'>Status</th>" +
+              "<th class='col-apps'>Applications</th>" +
+              "<th class='col-last-login' data-sort-type='date'>Last login</th>" +
+              "<th class='col-actions bic-text-right' data-sortable='false'>Actions</th>" +
             "</tr>" +
           "</thead>" +
           "<tbody id='users-table-body'></tbody>" +
@@ -396,65 +482,93 @@ async function renderUsers() {
   const renderRows = () => {
     const query = $("users-search")?.value.trim().toLowerCase() || "";
     const divisionFilter = $("users-division-filter")?.value.trim().toLowerCase() || "";
+    const positionFilter = $("users-position-filter")?.value.trim().toLowerCase() || "";
+    const orgRoleFilter = $("users-org-role-filter")?.value.trim().toLowerCase() || "";
+    const statusFilter = $("users-status-filter")?.value.trim().toLowerCase() || "";
+
     const filtered = users.filter((user) => {
-      const haystack = [user.full_name, user.username, user.email, user.division?.code, user.division?.name, user.status, ...user.applications.map((app) => app.code), ...user.roles.map((role) => role.name)].join(" ").toLowerCase();
+      const userOrgRole = user.org_role || (user.is_superadmin ? "system_administrator" : (user.position?.is_general_manager ? "general_manager" : (user.position?.is_manager ? "manager" : "employee")));
+      const haystack = [
+        user.full_name,
+        user.username,
+        user.employee_id || "",
+        user.email,
+        userOrgRole,
+        userOrgRole.replace(/_/g, " "),
+        user.division?.code,
+        user.division?.name,
+        user.position?.name,
+        user.status,
+        ...user.applications.map((app) => app.code),
+        ...user.roles.map((role) => role.name),
+      ].join(" ").toLowerCase();
+
       const matchQuery = !query || haystack.includes(query);
       const matchDivision = !divisionFilter || (user.division?.name || "").toLowerCase() === divisionFilter;
-      return matchQuery && matchDivision;
+      const matchPosition = !positionFilter || (user.position?.name || "").toLowerCase() === positionFilter;
+      const matchOrgRole = !orgRoleFilter || userOrgRole === orgRoleFilter;
+      const matchStatus = !statusFilter || (user.status || "").toLowerCase() === statusFilter;
+      return matchQuery && matchDivision && matchPosition && matchOrgRole && matchStatus;
     });
 
     $("users-table-body").innerHTML = filtered.length ? filtered.map((user) => {
       const initial = esc(getInitials(user.full_name || user.username));
-      const roleList = user.roles || [];
-      const visibleRoles = roleList.slice(0, 2);
-      const remainingCount = roleList.length - visibleRoles.length;
-      const allRolesTitle = esc(roleList.map((r) => r.name + " (" + r.application_code + ")").join(", "));
-      
-      const roleBadges = visibleRoles.map((role) =>
-        "<span class='bic-badge bic-badge-primary' title='" + esc(role.application_code) + " role'>" + esc(role.name) + "</span>"
-      ).join("");
-      const moreRoleBadge = remainingCount > 0 ? "<span class='bic-badge bic-badge-info' title='" + allRolesTitle + "'>+" + remainingCount + " more</span>" : "";
-      
-      const appBadges = user.applications.length
-        ? user.applications.map((app) => "<span class='bic-app-tag'>" + esc(app.code) + "</span>").join(" ")
-        : (user.is_superadmin ? "<span class='bic-badge bic-badge-primary'>All</span>" : "<span class='bic-muted'>None</span>");
+      let appBadges = "<span class='bic-muted'>None</span>";
+      if (user.is_superadmin) {
+        appBadges = "<span class='bic-badge bic-badge-purple' title='All Applications Authorized'>All Applications</span>";
+      } else if (user.applications && user.applications.length > 0) {
+        if (user.applications.length <= 3) {
+          appBadges = user.applications.map((app) => "<span class='bic-app-tag'>" + esc(app.code) + "</span>").join(" ");
+        } else {
+          const firstThree = user.applications.slice(0, 3).map((app) => "<span class='bic-app-tag'>" + esc(app.code) + "</span>").join(" ");
+          const remainingCount = user.applications.length - 3;
+          const remainingNames = user.applications.slice(3).map((app) => app.code).join(", ");
+          appBadges = firstThree + " <span class='bic-app-tag bic-app-tag-more' title='" + esc(remainingNames) + "'>+" + remainingCount + " more</span>";
+        }
+      }
 
       return "<tr>" +
-        "<td>" +
+        "<td class='col-user'>" +
           "<div class='bic-user-cell'>" +
             "<div class='bic-user-avatar bic-user-avatar-sm'>" + initial + "</div>" +
             "<div class='bic-user-names'>" +
               "<strong class='bic-user-name-title'>" + esc(user.full_name) + "</strong>" +
-              "<span class='bic-user-handle'>@" + esc(user.username) + "</span>" +
+              "<span class='bic-user-handle'>@" + esc(user.username) + " · <span class='bic-muted'>" + esc(user.email) + "</span></span>" +
             "</div>" +
           "</div>" +
         "</td>" +
-        "<td><span class='bic-email-cell' title='" + esc(user.email) + "'>" + esc(user.email) + "</span></td>" +
-        "<td>" + (user.division?.name ? "<span class='bic-division-tag'>" + esc(user.division.name) + "</span>" : "<span class='bic-muted'>Unassigned</span>") + "</td>" +
-        "<td>" + statusBadge(user.status) + "</td>" +
-        "<td><div class='bic-app-tags-wrap'>" + appBadges + "</div></td>" +
-        "<td><div class='bic-role-summary'>" + (roleBadges + moreRoleBadge || "<span class='bic-muted'>None</span>") + "</div></td>" +
-        "<td data-sort-value='" + esc(user.last_login_at || "") + "'><span class='bic-date-cell'>" + (user.last_login_at ? new Date(user.last_login_at).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'}) : "<span class='bic-muted'>Never</span>") + "</span></td>" +
-        "<td class='bic-text-right'>" +
+        "<td class='col-employee-id'>" + (user.employee_id ? "<span class='bic-employee-badge font-mono'><strong>" + esc(user.employee_id) + "</strong></span>" : "<span class='bic-muted'>—</span>") + "</td>" +
+        "<td class='col-division'>" + (user.division?.name ? "<span class='bic-division-tag'>" + esc(user.division.name) + "</span>" : "<span class='bic-muted'>Unassigned</span>") + "</td>" +
+        "<td class='col-position'>" + (user.position?.name ? "<span class='bic-position-tag'>" + esc(user.position.name) + "</span>" : "<span class='bic-muted'>Unassigned</span>") + "</td>" +
+        "<td class='col-org-role'>" + orgRoleBadge(user) + "</td>" +
+        "<td class='col-status'>" + statusBadge(user.status) + "</td>" +
+        "<td class='col-apps'><div class='bic-app-tags-wrap'>" + appBadges + "</div></td>" +
+        "<td class='col-last-login' data-sort-value='" + esc(user.last_login_at || "") + "'><span class='bic-date-cell'>" + (user.last_login_at ? new Date(user.last_login_at).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'}) : "<span class='bic-muted'>Never</span>") + "</span></td>" +
+        "<td class='col-actions bic-text-right'>" +
           "<div class='bic-action-row bic-justify-end'>" +
-            "<button class='bic-icon-action' data-details='" + user.id + "' title='View details' aria-label='View details'>" + icon("eye") + "</button>" +
-            "<button class='bic-icon-action' data-edit='" + user.id + "' title='Modify user' aria-label='Modify user'>" + icon("edit") + "</button>" +
-            "<button class='bic-icon-action bic-icon-action-danger' data-delete='" + user.id + "' title='Delete user' aria-label='Delete user'>" + icon("trash") + "</button>" +
+            "<button class='bic-icon-action bic-action-view' data-details='" + user.id + "' title='View details' aria-label='View details'>" + icon("eye") + "</button>" +
+            "<button class='bic-icon-action bic-action-edit' data-edit='" + user.id + "' title='Modify user' aria-label='Modify user'>" + icon("edit") + "</button>" +
+            "<button type='button' class='bic-icon-action bic-action-key' data-reset-password='" + esc(user.id) + "' title='Reset password' aria-label='Reset password for " + esc(user.username) + "'>" + icon("key") + "</button>" +
+            "<button class='bic-icon-action bic-action-delete' data-delete='" + user.id + "' title='Delete user' aria-label='Delete user'>" + icon("trash") + "</button>" +
           "</div>" +
         "</td>" +
       "</tr>";
-    }).join("") : "<tr><td colspan='8' class='bic-empty'>No users found. Try adjusting your search or filters.</td></tr>";
+    }).join("") : "<tr><td colspan='9' class='bic-empty'>No users found. Try adjusting your search or filters.</td></tr>";
 
     document.querySelectorAll("[data-details]").forEach((button) => button.onclick = () => openUserDetails(button.dataset.details, false));
     document.querySelectorAll("[data-edit]").forEach((button) => button.onclick = () => openUserDetails(button.dataset.edit, true));
+    document.querySelectorAll("[data-reset-password]").forEach((button) => button.onclick = () => openPasswordResetForm(users.find((user) => user.id === button.dataset.resetPassword)));
     document.querySelectorAll("[data-delete]").forEach((button) => button.onclick = () => deleteUser(button.dataset.delete));
   };
 
   $("users-search").oninput = renderRows;
   $("users-division-filter").onchange = renderRows;
+  $("users-position-filter").onchange = renderRows;
+  $("users-org-role-filter").onchange = renderRows;
+  $("users-status-filter").onchange = renderRows;
   renderRows();
   enableTableSorting($("section-users"));
-  $("new-user").onclick = () => openNewUserForm(divisions);
+  $("new-user").onclick = () => openNewUserForm(divisions, positions, users);
   $("export-users").onclick = () => downloadUsersCsv(users);
   $("import-users").onclick = () => $("users-import-file").click();
   $("users-import-file").onchange = async (event) => {
@@ -465,21 +579,77 @@ async function renderUsers() {
   };
 }
 
-function openNewUserForm(divisions) {
+function openNewUserForm(divisions, positions, users) {
   $("modal-root").innerHTML =
     "<div class='bic-modal-backdrop is-open' role='presentation'><div class='bic-modal' role='dialog' aria-modal='true' aria-labelledby='new-user-title'>" +
     "<div class='bic-modal-header'><div><p class='bic-kicker'>USER DIRECTORY</p><h3 id='new-user-title'>Create user</h3></div><button class='bic-icon-button' data-close-modal aria-label='Close'>✕</button></div>" +
-    "<form id='new-user-form'><div class='bic-modal-body'><div class='bic-form-group'><label class='bic-label' for='new-username'>Username</label><input class='bic-control' id='new-username' required pattern='[a-zA-Z0-9._-]+'></div>" +
+    "<form id='new-user-form'><div class='bic-modal-body'>" +
+    "<div class='bic-form-group'><label class='bic-label' for='new-username'>Username</label><input class='bic-control' id='new-username' required pattern='[a-zA-Z0-9._-]+'></div>" +
+    "<div class='bic-form-group'><label class='bic-label' for='new-employee-id'>Employee ID</label><input class='bic-control' id='new-employee-id' placeholder='e.g. EMP00123'><span class='bic-help'>Corporate employee number.</span></div>" +
     "<div class='bic-form-group'><label class='bic-label' for='new-email'>Email</label><input class='bic-control' id='new-email' type='email' required></div>" +
     "<div class='bic-form-group'><label class='bic-label' for='new-full-name'>Full name</label><input class='bic-control' id='new-full-name' required></div>" +
+    "<div class='bic-form-group'><label class='bic-label' for='new-org-role'>Organizational Role</label><select class='bic-select' id='new-org-role'><option value='employee' selected>Standard Employee (Staff / Contributor)</option><option value='manager'>Manager (Department / Division Manager)</option><option value='general_manager'>General Manager (Executive Approver)</option><option value='system_administrator'>System Administrator (Super Admin / IT Admin)</option></select><span class='bic-help'>Authoritative role tier used by Helpdesk & approval routing.</span></div>" +
     "<div class='bic-form-group'><label class='bic-label' for='new-division'>Division</label><select class='bic-select' id='new-division'><option value=''>Unassigned</option>" + divisions.map((division) => "<option value='" + esc(division.id) + "'>" + esc(division.name) + " (" + esc(division.code) + ")</option>").join("") + "</select></div>" +
-    "<div class='bic-form-group'><label class='bic-label' for='new-password'>Initial password</label><input class='bic-control' id='new-password' type='password' minlength='12' required><span class='bic-help'>Minimum 12 characters.</span></div></div>" +
+    "<div class='bic-form-group'><label class='bic-label' for='new-position'>Position</label><select class='bic-select' id='new-position'><option value=''>Unassigned</option>" + positions.map((p) => "<option value='" + esc(p.id) + "'>" + esc(p.name) + (p.is_manager ? " (Manager)" : "") + "</option>").join("") + "</select></div>" +
+    "<div class='bic-form-group'><label class='bic-label' for='new-manager'>Direct Manager</label><select class='bic-select' id='new-manager'><option value=''>Automatic (Division Manager)</option>" + users.filter((u) => u.status === "active").map((u) => "<option value='" + esc(u.id) + "'>" + esc(u.full_name) + " (@" + esc(u.username) + ")</option>").join("") + "</select><span class='bic-help'>Optional override. Defaults to division manager.</span></div>" +
+    "<div class='bic-form-group'><label class='bic-label' for='new-password'>Initial password</label><input class='bic-control' id='new-password' type='password' minlength='12' required><span class='bic-help'>Minimum 12 characters.</span></div>" +
+    "</div>" +
     "<div class='bic-modal-footer'><button type='button' class='bic-btn bic-btn-secondary' data-close-modal>Cancel</button><button type='submit' class='bic-btn bic-btn-primary'>Create user</button></div></form></div></div>";
   document.querySelectorAll("[data-close-modal]").forEach((button) => button.onclick = closeModal);
+
+  $("new-org-role").onchange = () => {
+    const role = $("new-org-role").value;
+    if (role === "general_manager") {
+      const gm = positions.find((p) => p.is_general_manager || p.code === "GENERAL_MANAGER" || p.code === "GM");
+      if (gm) $("new-position").value = gm.id;
+    } else if (role === "manager") {
+      const mgr = positions.find((p) => p.is_manager && !p.is_general_manager);
+      if (mgr) $("new-position").value = mgr.id;
+    } else if (role === "employee") {
+      const currentPos = positions.find((p) => p.id === $("new-position").value);
+      if (currentPos && (currentPos.is_manager || currentPos.is_general_manager)) {
+        const staff = positions.find((p) => !p.is_manager && !p.is_general_manager);
+        if (staff) $("new-position").value = staff.id;
+      }
+    }
+  };
+  $("new-position").onchange = () => {
+    const pos = positions.find((p) => p.id === $("new-position").value);
+    if ($("new-org-role").value === "system_administrator") return;
+    if (pos?.is_general_manager) $("new-org-role").value = "general_manager";
+    else if (pos?.is_manager) $("new-org-role").value = "manager";
+    else if (pos) $("new-org-role").value = "employee";
+  };
+
   $("new-user-form").onsubmit = async (event) => {
     event.preventDefault();
+    const role = $("new-org-role").value;
+    const isSuperAdmin = role === "system_administrator";
+    let posId = $("new-position").value || null;
+    if (!posId) {
+      if (role === "general_manager") {
+        const gm = positions.find((p) => p.is_general_manager || p.code === "GENERAL_MANAGER" || p.code === "GM");
+        if (gm) posId = gm.id;
+      } else if (role === "manager") {
+        const mgr = positions.find((p) => p.is_manager && !p.is_general_manager);
+        if (mgr) posId = mgr.id;
+      }
+    }
     try {
-      await api("/v1/admin/users", {method:"POST", body:JSON.stringify({username:$("new-username").value, email:$("new-email").value, full_name:$("new-full-name").value, password:$("new-password").value, division_id:$("new-division").value || null})});
+      await api("/v1/admin/users", {
+        method: "POST",
+        body: JSON.stringify({
+          username: $("new-username").value,
+          employee_id: $("new-employee-id").value.trim() || null,
+          email: $("new-email").value,
+          full_name: $("new-full-name").value,
+          password: $("new-password").value,
+          is_superadmin: isSuperAdmin,
+          division_id: $("new-division").value || null,
+          position_id: posId,
+          manager_user_id: $("new-manager").value || null,
+        })
+      });
       closeModal();
       showToast("User created");
       await renderUsers();
@@ -498,34 +668,47 @@ async function deleteUser(userId) {
 }
 
 async function renderDivisions() {
-  const divisions = await api("/v1/admin/divisions");
+  const [divisions, users] = await Promise.all([api("/v1/admin/divisions"), api("/v1/admin/users")]);
   $("section-divisions").innerHTML =
-    "<div class='bic-page-header'><div><p class='bic-kicker'>ORGANIZATION DIRECTORY</p><h2 class='bic-page-title'>Divisions</h2><p class='bic-page-subtitle'>Manage the organizational divisions available on user profiles.</p></div><button id='new-division' class='bic-btn bic-btn-primary bic-btn-sm'>" + icon("plus") + " New division</button></div>" +
-    "<div class='bic-card bic-panel'><div class='bic-table-toolbar'><span class='bic-muted'>" + divisions.length + " divisions</span><span class='bic-help'>Deleting a division unassigns it from users; user accounts are not deleted.</span></div><div class='bic-table-wrap'><table class='bic-table bic-sortable'><thead><tr><th>Code</th><th>Name</th><th>Description</th><th data-sortable='false' class='bic-text-right'>Actions</th></tr></thead><tbody>" +
-    (divisions.map((division) => "<tr><td><strong>" + esc(division.code) + "</strong></td><td>" + esc(division.name) + "</td><td>" + esc(division.description || "—") + "</td><td class='bic-text-right'><div class='bic-action-row bic-justify-end'><button class='bic-icon-action' data-edit-division='" + esc(division.id) + "' title='Modify division' aria-label='Modify division'>" + icon("edit") + "</button><button class='bic-icon-action bic-icon-action-danger' data-delete-division='" + esc(division.id) + "' title='Delete division' aria-label='Delete division'>" + icon("trash") + "</button></div></td></tr>").join("") || "<tr><td colspan='4' class='bic-empty'>No divisions defined yet.</td></tr>") +
+    "<div class='bic-page-header'><div><p class='bic-kicker'>ORGANIZATION DIRECTORY</p><h2 class='bic-page-title'>Divisions</h2><p class='bic-page-subtitle'>Manage the organizational divisions and designated division managers.</p></div><button id='new-division' class='bic-btn bic-btn-primary bic-btn-sm'>" + icon("plus") + " New division</button></div>" +
+    "<div class='bic-card bic-panel'><div class='bic-table-toolbar'><span class='bic-muted'>" + divisions.length + " divisions</span><span class='bic-help'>Deleting a division unassigns it from users; user accounts are not deleted.</span></div><div class='bic-table-wrap'><table class='bic-table bic-sortable'><thead><tr><th>Code</th><th>Name</th><th>Division Manager</th><th>Description</th><th data-sortable='false' class='bic-text-right'>Actions</th></tr></thead><tbody>" +
+    (divisions.map((division) => {
+      const mgrText = division.manager ? "<strong>" + esc(division.manager.full_name) + "</strong> <small class='bic-muted'>(" + esc(division.manager.email) + ")</small>" : "<span class='bic-muted'>Unassigned</span>";
+      return "<tr><td><strong>" + esc(division.code) + "</strong></td><td>" + esc(division.name) + "</td><td>" + mgrText + "</td><td>" + esc(division.description || "—") + "</td><td class='bic-text-right'><div class='bic-action-row bic-justify-end'><button class='bic-icon-action' data-edit-division='" + esc(division.id) + "' title='Modify division' aria-label='Modify division'>" + icon("edit") + "</button><button class='bic-icon-action bic-icon-action-danger' data-delete-division='" + esc(division.id) + "' title='Delete division' aria-label='Delete division'>" + icon("trash") + "</button></div></td></tr>";
+    }).join("") || "<tr><td colspan='5' class='bic-empty'>No divisions defined yet.</td></tr>") +
     "</tbody></table></div></div>";
   enableTableSorting($("section-divisions"));
-  $("new-division").onclick = () => openDivisionForm();
+  $("new-division").onclick = () => openDivisionForm(null, users);
   document.querySelectorAll("[data-edit-division]").forEach((button) => button.onclick = () => {
     const division = divisions.find((candidate) => candidate.id === button.dataset.editDivision);
-    if (division) openDivisionForm(division);
+    if (division) openDivisionForm(division, users);
   });
   document.querySelectorAll("[data-delete-division]").forEach((button) => button.onclick = () => deleteDivision(button.dataset.deleteDivision));
 }
 
-function openDivisionForm(division = null) {
+function openDivisionForm(division = null, users = []) {
   const editing = Boolean(division);
+  const managerOptions = "<option value=''>Unassigned</option>" + users.filter((u) => u.status === "active").map((u) => "<option value='" + esc(u.id) + "' " + (division?.manager_user_id === u.id ? "selected" : "") + ">" + esc(u.full_name) + " (@" + esc(u.username) + ")</option>").join("");
+
   $("modal-root").innerHTML =
     "<div class='bic-modal-backdrop is-open' role='presentation'><div class='bic-modal' role='dialog' aria-modal='true' aria-labelledby='division-form-title'>" +
     "<div class='bic-modal-header'><div><p class='bic-kicker'>ORGANIZATION DIRECTORY</p><h3 id='division-form-title'>" + (editing ? "Modify division" : "Create division") + "</h3></div><button class='bic-icon-button' data-close-modal aria-label='Close'>✕</button></div>" +
-    "<form id='division-form'><div class='bic-modal-body'><div class='bic-form-group'><label class='bic-label' for='division-code'>Code</label><input class='bic-control' id='division-code' required pattern='[A-Z0-9_-]+' maxlength='40' value='" + esc(division?.code || "") + "'><span class='bic-help'>Use a stable uppercase code, for example FINANCE or IT_OPS.</span></div>" +
+    "<form id='division-form'><div class='bic-modal-body'>" +
+    "<div class='bic-form-group'><label class='bic-label' for='division-code'>Code</label><input class='bic-control' id='division-code' required pattern='[A-Z0-9_-]+' maxlength='40' value='" + esc(division?.code || "") + "'><span class='bic-help'>Use a stable uppercase code, for example FINANCE or IT_OPS.</span></div>" +
     "<div class='bic-form-group'><label class='bic-label' for='division-name'>Name</label><input class='bic-control' id='division-name' required maxlength='120' value='" + esc(division?.name || "") + "'></div>" +
-    "<div class='bic-form-group'><label class='bic-label' for='division-description'>Description</label><textarea class='bic-control bic-textarea' id='division-description' maxlength='500'>" + esc(division?.description || "") + "</textarea></div></div>" +
+    "<div class='bic-form-group'><label class='bic-label' for='division-manager'>Division Manager</label><select class='bic-select' id='division-manager'>" + managerOptions + "</select><span class='bic-help'>Responsible manager for Helpdesk 1st-level approval workflow.</span></div>" +
+    "<div class='bic-form-group'><label class='bic-label' for='division-description'>Description</label><textarea class='bic-control bic-textarea' id='division-description' maxlength='500'>" + esc(division?.description || "") + "</textarea></div>" +
+    "</div>" +
     "<div class='bic-modal-footer'><button type='button' class='bic-btn bic-btn-secondary' data-close-modal>Cancel</button><button type='submit' class='bic-btn bic-btn-primary'>" + (editing ? "Apply changes" : "Create division") + "</button></div></form></div></div>";
   document.querySelectorAll("[data-close-modal]").forEach((button) => button.onclick = closeModal);
   $("division-form").onsubmit = async (event) => {
     event.preventDefault();
-    const body = {code:$("division-code").value.trim().toUpperCase(), name:$("division-name").value.trim(), description:$("division-description").value.trim() || null};
+    const body = {
+      code: $("division-code").value.trim().toUpperCase(),
+      name: $("division-name").value.trim(),
+      manager_user_id: $("division-manager").value || null,
+      description: $("division-description").value.trim() || null
+    };
     try {
       await api(editing ? "/v1/admin/divisions/" + division.id : "/v1/admin/divisions", {method:editing ? "PUT" : "POST", body:JSON.stringify(body)});
       closeModal();
@@ -551,28 +734,69 @@ async function openUserDetails(userId, editable) {
   const applications = await api("/v1/admin/applications");
   const roles = await api("/v1/admin/roles");
   const divisions = await api("/v1/admin/divisions");
+  const positions = await api("/v1/admin/positions");
+  const allUsers = await api("/v1/admin/users");
+
   const selectedApplications = new Set(user.applications.map((app) => app.code));
   const selectedRoles = new Set(user.roles.map((role) => role.id));
   const fieldDisabled = editable ? "" : " disabled";
+  const currentOrgRole = (user.is_superadmin || user.org_role === "system_administrator")
+    ? "system_administrator"
+    : (user.position?.is_general_manager || user.org_role === "general_manager"
+        ? "general_manager"
+        : (user.position?.is_manager || user.org_role === "manager" ? "manager" : "employee"));
+
   const accessRows = applications.map((app) => {
     const appRoles = roles.filter((role) => role.application_code === app.code);
     const applicationCell = "<td class='bic-access-application-cell' rowspan='" + Math.max(appRoles.length, 1) + "'><label class='bic-table-check'><input type='checkbox' data-app-code='" + esc(app.code) + "' " + (selectedApplications.has(app.code) ? "checked" : "") + fieldDisabled + "><span><strong>" + esc(app.name) + "</strong><small class='bic-muted'>" + esc(app.code) + "</small></span></label></td>";
     if (!appRoles.length) return "<tr>" + applicationCell + "<td colspan='2' class='bic-muted'>No roles defined for this application.</td></tr>";
     return appRoles.map((role, index) => "<tr>" + (index === 0 ? applicationCell : "") + "<td><label class='bic-table-check'><input type='checkbox' data-role-id='" + esc(role.id) + "' data-role-application='" + esc(app.code) + "' " + (selectedRoles.has(role.id) ? "checked" : "") + fieldDisabled + "><span>" + esc(role.name) + "</span></label></td><td><span class='bic-compact-value'>" + esc(role.description || "Application role") + "</span></td></tr>").join("");
   }).join("");
+
+  const managerCandidates = allUsers.filter((u) => u.id !== user.id && u.status === "active");
+
   $("modal-root").innerHTML =
     "<div class='bic-modal-backdrop is-open' role='presentation'><div class='bic-modal bic-user-details-modal' role='dialog' aria-modal='true' aria-labelledby='user-details-title'>" +
-    "<div class='bic-modal-header'><div class='bic-user-chip'><div class='bic-user-avatar bic-user-avatar-lg'>" + esc(getInitials(user.full_name || user.username)) + "</div><div><p class='bic-kicker bic-mb-0'>" + (editable ? "EDIT USER" : "USER DETAILS") + "</p><h3 id='user-details-title' class='bic-mb-0'>" + esc(user.full_name) + "</h3><p class='bic-muted bic-mb-0'>@" + esc(user.username) + "</p></div></div><button class='bic-icon-button' data-close-modal aria-label='Close'>✕</button></div>" +
+    "<div class='bic-modal-header'><div class='bic-user-chip'><div class='bic-user-avatar bic-user-avatar-lg'>" + esc(getInitials(user.full_name || user.username)) + "</div><div><div class='bic-chip-header-row'><p class='bic-kicker bic-mb-0'>" + (editable ? "EDIT USER" : "USER DETAILS") + "</p>" + orgRoleBadge(user) + "</div><h3 id='user-details-title' class='bic-mb-0'>" + esc(user.full_name) + "</h3><p class='bic-muted bic-mb-0'>@" + esc(user.username) + "</p></div></div><button class='bic-icon-button' data-close-modal aria-label='Close'>✕</button></div>" +
     "<form id='user-details-form'><div class='bic-modal-body'>" +
-    "<div class='bic-form-group'><label class='bic-label' for='detail-email'>Email</label><input class='bic-control' id='detail-email' type='email' value='" + esc(user.email) + "' required" + fieldDisabled + "></div>" +
     "<div class='bic-form-group'><label class='bic-label' for='detail-name'>Full name</label><input class='bic-control' id='detail-name' value='" + esc(user.full_name) + "' required" + fieldDisabled + "></div>" +
+    "<div class='bic-form-group'><label class='bic-label' for='detail-employee-id'>Employee ID</label><input class='bic-control' id='detail-employee-id' value='" + esc(user.employee_id || "") + "' placeholder='e.g. EMP00123'" + fieldDisabled + "><span class='bic-help'>Authoritative corporate employee number.</span></div>" +
+    "<div class='bic-form-group'><label class='bic-label' for='detail-email'>Email</label><input class='bic-control' id='detail-email' type='email' value='" + esc(user.email) + "' required" + fieldDisabled + "></div>" +
+    "<div class='bic-form-group'><label class='bic-label' for='detail-org-role'>Organizational Role</label><select class='bic-select' id='detail-org-role'" + fieldDisabled + "><option value='employee' " + (currentOrgRole === "employee" ? "selected" : "") + ">Standard Employee (Staff / Contributor)</option><option value='manager' " + (currentOrgRole === "manager" ? "selected" : "") + ">Manager (Department / Division Manager)</option><option value='general_manager' " + (currentOrgRole === "general_manager" ? "selected" : "") + ">General Manager (Executive Approver)</option><option value='system_administrator' " + (currentOrgRole === "system_administrator" ? "selected" : "") + ">System Administrator (Super Admin / IT Admin)</option></select><span class='bic-help'>Authoritative role tier used by Helpdesk and integrated systems for administrative and approval routing.</span></div>" +
     "<div class='bic-form-group'><label class='bic-label' for='detail-division'>Division</label><select class='bic-select' id='detail-division'" + fieldDisabled + "><option value=''>Unassigned</option>" + divisions.map((division) => "<option value='" + esc(division.id) + "' " + (user.division?.id === division.id ? "selected" : "") + ">" + esc(division.name) + " (" + esc(division.code) + ")</option>").join("") + "</select></div>" +
+    "<div class='bic-form-group'><label class='bic-label' for='detail-position'>Position</label><select class='bic-select' id='detail-position'" + fieldDisabled + "><option value=''>Unassigned</option>" + positions.map((p) => "<option value='" + esc(p.id) + "' " + (user.position?.id === p.id ? "selected" : "") + ">" + esc(p.name) + (p.is_manager ? " (Manager)" : "") + "</option>").join("") + "</select></div>" +
+    "<div class='bic-form-group'><label class='bic-label' for='detail-manager'>Direct Manager</label><select class='bic-select' id='detail-manager'" + fieldDisabled + "><option value=''>Automatic (Division Manager)</option>" + managerCandidates.map((m) => "<option value='" + esc(m.id) + "' " + (user.manager?.id === m.id ? "selected" : "") + ">" + esc(m.full_name) + " (@" + esc(m.username) + ")</option>").join("") + "</select><span class='bic-help'>Supervisor override if distinct from division head.</span></div>" +
     "<div class='bic-form-group'><label class='bic-label' for='detail-status'>Status</label><select class='bic-select' id='detail-status'" + fieldDisabled + "><option value='active' " + (user.status === "active" ? "selected" : "") + ">Active</option><option value='disabled' " + (user.status === "disabled" ? "selected" : "") + ">Disabled</option><option value='locked' " + (user.status === "locked" ? "selected" : "") + ">Locked</option></select></div>" +
     "<div class='bic-form-group'><span class='bic-label'>Application access and roles</span><div class='bic-table-wrap bic-access-table-wrap'><table class='bic-table bic-access-table'><thead><tr><th>Application access</th><th>Role</th><th>Role description</th></tr></thead><tbody>" + accessRows + "</tbody></table></div><span class='bic-help'>Selecting a role automatically grants access to its application.</span></div>" +
     (editable ? "<div class='bic-form-group'><label class='bic-label' for='detail-password'>Reset password <span class='bic-help'>Optional; leave blank to keep the current password.</span></label><input class='bic-control' id='detail-password' type='password' minlength='12' placeholder='Minimum 12 characters'></div>" : "") +
     "</div><div class='bic-modal-footer'><button type='button' class='bic-btn bic-btn-secondary' data-close-modal>" + (editable ? "Cancel" : "Close") + "</button>" + (editable ? "<button type='submit' class='bic-btn bic-btn-primary'>Apply changes</button>" : "") + "</div></form></div></div>";
   document.querySelectorAll("[data-close-modal]").forEach((button) => button.onclick = closeModal);
   if (!editable) return;
+
+  $("detail-org-role").onchange = () => {
+    const role = $("detail-org-role").value;
+    if (role === "general_manager") {
+      const gm = positions.find((p) => p.is_general_manager || p.code === "GENERAL_MANAGER" || p.code === "GM");
+      if (gm) $("detail-position").value = gm.id;
+    } else if (role === "manager") {
+      const mgr = positions.find((p) => p.is_manager && !p.is_general_manager);
+      if (mgr) $("detail-position").value = mgr.id;
+    } else if (role === "employee") {
+      const currentPos = positions.find((p) => p.id === $("detail-position").value);
+      if (currentPos && (currentPos.is_manager || currentPos.is_general_manager)) {
+        const staff = positions.find((p) => !p.is_manager && !p.is_general_manager);
+        if (staff) $("detail-position").value = staff.id;
+      }
+    }
+  };
+  $("detail-position").onchange = () => {
+    const pos = positions.find((p) => p.id === $("detail-position").value);
+    if ($("detail-org-role").value === "system_administrator") return;
+    if (pos?.is_general_manager) $("detail-org-role").value = "general_manager";
+    else if (pos?.is_manager) $("detail-org-role").value = "manager";
+    else if (pos) $("detail-org-role").value = "employee";
+  };
+
   document.querySelectorAll("[data-role-id]").forEach((input) => input.onchange = () => {
     if (input.checked) {
       const appInput = document.querySelector("[data-app-code='" + input.dataset.roleApplication + "']");
@@ -584,10 +808,34 @@ async function openUserDetails(userId, editable) {
   });
   $("user-details-form").onsubmit = async (event) => {
     event.preventDefault();
+    const role = $("detail-org-role").value;
+    const isSuperAdmin = role === "system_administrator";
     const selectedAppCodes = new Set(Array.from(document.querySelectorAll("[data-app-code]:checked")).map((input) => input.dataset.appCode));
     const selectedRoleIds = new Set(Array.from(document.querySelectorAll("[data-role-id]:checked")).map((input) => input.dataset.roleId));
+    let posId = $("detail-position").value || null;
+    if (!posId) {
+      if (role === "general_manager") {
+        const gm = positions.find((p) => p.is_general_manager || p.code === "GENERAL_MANAGER" || p.code === "GM");
+        if (gm) posId = gm.id;
+      } else if (role === "manager") {
+        const mgr = positions.find((p) => p.is_manager && !p.is_general_manager);
+        if (mgr) posId = mgr.id;
+      }
+    }
     try {
-      await api("/v1/admin/users/" + userId, {method:"PUT", body:JSON.stringify({email:$("detail-email").value, full_name:$("detail-name").value, status:$("detail-status").value, division_id:$("detail-division").value || null})});
+      await api("/v1/admin/users/" + userId, {
+        method: "PUT",
+        body: JSON.stringify({
+          email: $("detail-email").value,
+          full_name: $("detail-name").value,
+          employee_id: $("detail-employee-id").value.trim() || null,
+          status: $("detail-status").value,
+          is_superadmin: isSuperAdmin,
+          division_id: $("detail-division").value || null,
+          position_id: posId,
+          manager_user_id: $("detail-manager").value || null,
+        })
+      });
       for (const app of applications) {
         if (selectedAppCodes.has(app.code)) await api("/v1/admin/users/" + userId + "/applications", {method:"POST", body:JSON.stringify({application_code:app.code, enabled:true})});
         else if (selectedApplications.has(app.code)) await api("/v1/admin/users/" + userId + "/applications/" + app.code, {method:"DELETE"});
@@ -602,6 +850,42 @@ async function openUserDetails(userId, editable) {
       showToast("User changes applied");
       await renderUsers();
     } catch (error) { showToast(error.message, true); }
+  };
+}
+function openPasswordResetForm(user) {
+  if (!user) return;
+  $("modal-root").innerHTML =
+    "<div class='bic-modal-backdrop is-open'><div class='bic-modal' role='dialog' aria-modal='true' aria-labelledby='password-reset-title'>" +
+    "<div class='bic-modal-header'><div><h3 id='password-reset-title'>Reset password</h3><p class='bic-muted'>" + esc(user.full_name) + " (@" + esc(user.username) + ")</p></div><button type='button' class='bic-icon-button' data-close-modal aria-label='Close'>✕</button></div>" +
+    "<form id='admin-password-reset-form'><div class='bic-modal-body'>" +
+    "<div class='bic-form-group'><label class='bic-label' for='admin-reset-password'>New password</label><input class='bic-control' id='admin-reset-password' type='password' autocomplete='new-password' minlength='12' maxlength='256' required><span class='bic-help'>Minimum 12 characters. The user will sign in with this new password.</span></div>" +
+    "<div class='bic-form-group'><label class='bic-label' for='admin-reset-confirm'>Confirm new password</label><input class='bic-control' id='admin-reset-confirm' type='password' autocomplete='new-password' minlength='12' maxlength='256' required></div>" +
+    "<p id='admin-reset-error' class='bic-login-error' role='alert'></p></div>" +
+    "<div class='bic-modal-footer'><button type='button' class='bic-btn bic-btn-secondary' data-close-modal>Cancel</button><button type='submit' class='bic-btn bic-btn-primary'>Reset password</button></div></form></div></div>";
+  $("modal-root").querySelectorAll("[data-close-modal]").forEach((button) => button.onclick = closeModal);
+  $("admin-reset-password").focus();
+  $("admin-password-reset-form").onsubmit = async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const message = $("admin-reset-error");
+    const password = $("admin-reset-password").value;
+    message.textContent = "";
+    if (password !== $("admin-reset-confirm").value) {
+      message.textContent = "The passwords do not match.";
+      $("admin-reset-confirm").focus();
+      return;
+    }
+    const submit = form.querySelector("[type='submit']");
+    submit.disabled = true;
+    try {
+      await api("/v1/admin/users/" + encodeURIComponent(user.id) + "/reset-password", {method:"POST", body:JSON.stringify({password})});
+      form.reset();
+      if (form.isConnected) closeModal();
+      showToast("Password reset for " + user.username);
+    } catch (error) {
+      if (form.isConnected) message.textContent = error.message;
+      else showToast(error.message, true);
+    } finally { submit.disabled = false; }
   };
 }
 function closeModal() { $("modal-root").innerHTML = ""; }
@@ -628,165 +912,1170 @@ function openApplicationForm() {
 }
 
 async function renderApplications() {
-  const apps = await api("/v1/admin/applications");
+  const applications = await api("/v1/admin/applications");
   $("section-applications").innerHTML =
-    "<div class='bic-page-header'><div><h3>Applications</h3><p class='bic-muted'>" + apps.length + " registered applications</p></div><button id='new-app' class='bic-btn bic-btn-primary'>" + icon("plus") + " Register application</button></div>" +
-    "<div class='bic-card bic-panel'><div class='bic-table-wrap'><table class='bic-table bic-sortable'><thead><tr><th>Code</th><th>Name</th><th>Description</th><th>Status</th></tr></thead><tbody>" +
-    apps.map((app) => "<tr><td><strong>" + esc(app.code) + "</strong></td><td>" + esc(app.name) + "</td><td>" + esc(app.description || "—") + "</td><td>" + statusBadge(app.status) + "</td></tr>").join("") +
+    "<div class='bic-page-header'><div><p class='bic-kicker'>OIDC IDENTITY PROVIDER</p><h2 class='bic-page-title'>Applications &amp; OIDC Clients</h2><p class='bic-page-subtitle'>Manage registered OpenID Connect clients, allowed redirect URIs, OAuth 2.0 credentials, and token lifetimes.</p></div><button id='new-application' class='bic-btn bic-btn-primary bic-btn-sm'>" + icon("plus") + " Register application</button></div>" +
+    "<div class='bic-card bic-panel'><div class='bic-table-toolbar'><span class='bic-muted'>" + applications.length + " registered client application" + (applications.length === 1 ? "" : "s") + "</span></div>" +
+    "<div class='bic-table-wrap'><table class='bic-table bic-sortable'><thead><tr><th>Application</th><th>Client ID</th><th>Client Type</th><th>Redirect URIs</th><th>Status</th><th class='bic-text-right'>Actions</th></tr></thead><tbody>" +
+    applications.map((app) => {
+      const uriCount = (app.redirect_uris || []).length;
+      return "<tr>" +
+        "<td><div><strong>" + esc(app.name) + "</strong><br><span class='bic-app-tag' style='font-size:0.75rem;'>" + esc(app.code) + "</span></div></td>" +
+        "<td><code>" + esc(app.client_id || app.code.toLowerCase()) + "</code></td>" +
+        "<td><span class='bic-badge " + (app.client_type === "public" ? "bic-badge-warning" : "bic-badge-info") + "'>" + esc(app.client_type || "confidential") + "</span></td>" +
+        "<td><span class='bic-badge " + (uriCount > 0 ? "bic-badge-success" : "bic-badge-warning") + "'>" + uriCount + " registered</span></td>" +
+        "<td>" + statusBadge(app.status) + "</td>" +
+        "<td class='bic-text-right'>" +
+          "<button class='bic-btn bic-btn-secondary bic-btn-sm' data-configure-app='" + esc(app.id) + "' style='padding:0.25rem 0.6rem;font-size:0.75rem;'>" + icon("lock") + " Configure OIDC</button>" +
+        "</td>" +
+      "</tr>";
+    }).join("") +
     "</tbody></table></div></div>";
   enableTableSorting($("section-applications"));
-  $("new-app").onclick = () => openApplicationForm();
+  $("new-application").onclick = openApplicationForm;
+
+  document.querySelectorAll("[data-configure-app]").forEach((btn) => {
+    btn.onclick = () => {
+      const app = applications.find((a) => a.id === btn.dataset.configureApp);
+      if (app) openApplicationConfigModal(app);
+    };
+  });
 }
 
-async function renderRBAC() {
-  const [roles, permissions, applications] = await Promise.all([api("/v1/admin/roles"), api("/v1/admin/permissions"), api("/v1/admin/applications")]);
-  const render = (applicationCode) => {
-    const appRoles = roles.filter((role) => role.application_code === applicationCode);
-    const appPermissions = permissions.filter((permission) => permission.application_code === applicationCode);
-    const roleRows = appRoles.map((role) => {
-      const permissionNames = role.permissions || [];
-      return "<tr><td><strong>" + esc(role.name) + "</strong><br><span class='bic-muted'>" + esc(role.description || "No description") + "</span></td><td data-sort-type='number' data-sort-value='" + permissionNames.length + "'><span class='bic-badge bic-badge-primary'>" + permissionNames.length + " permission" + (permissionNames.length === 1 ? "" : "s") + "</span></td><td><span class='bic-compact-value' title='" + esc(permissionNames.join(", ")) + "'>" + esc(permissionNames.slice(0, 3).join(", ") || "None") + (permissionNames.length > 3 ? " …" : "") + "</span></td></tr>";
-    }).join("") || "<tr><td colspan='3' class='bic-empty'>No roles defined for this application.</td></tr>";
-    const permissionRows = appPermissions.map((permission) => "<tr><td><strong>" + esc(permission.code) + "</strong></td><td>" + esc(permission.description || "—") + "</td></tr>").join("") || "<tr><td colspan='2' class='bic-empty'>No permissions defined for this application.</td></tr>";
-    const appOptions = applications.map((app) => "<option value='" + esc(app.code) + "' " + (app.code === applicationCode ? "selected" : "") + ">" + esc(app.name) + " (" + esc(app.code) + ")</option>").join("");
-    $("section-rbac").innerHTML =
-      "<div class='bic-page-header'><div><p class='bic-kicker'>AUTHORIZATION POLICY</p><h3>Roles & permissions</h3><p class='bic-muted'>Manage one application policy at a time to keep role and permission assignments clear and safe.</p></div><div class='bic-action-row'><select class='bic-select' id='rbac-application' aria-label='Select application'>" + appOptions + "</select><button id='toggle-role-form' class='bic-btn bic-btn-secondary bic-btn-sm'>" + icon("plus") + " New role</button><button id='toggle-permission-form' class='bic-btn bic-btn-primary bic-btn-sm'>" + icon("plus") + " New permission</button></div></div>" +
-      "<div class='bic-grid-2'>" +
-        "<div class='bic-card bic-panel'>" +
-          "<div class='bic-toolbar'><h3 class='bic-section-title'>Roles</h3><span class='bic-muted'>" + appRoles.length + " defined</span></div>" +
-          "<form id='form-create-role' class='bic-inline-form-box bic-hidden'>" +
-            "<div class='bic-inline-form-header'>" +
-              "<strong class='bic-inline-form-title'>Create Role</strong>" +
-              "<span class='bic-inline-form-app'>" + esc(applicationCode) + "</span>" +
-            "</div>" +
-            "<div class='bic-inline-form-grid'>" +
-              "<div class='bic-form-group'>" +
-                "<label class='bic-label' for='new-role-name'>Role Name <span class='bic-text-danger'>*</span></label>" +
-                "<input class='bic-control' id='new-role-name' placeholder='e.g. auditor or support_lead' required maxlength='80'>" +
-              "</div>" +
-              "<div class='bic-form-group'>" +
-                "<label class='bic-label' for='new-role-desc'>Description</label>" +
-                "<input class='bic-control' id='new-role-desc' placeholder='Brief description of duties' maxlength='255'>" +
+function openApplicationConfigModal(app) {
+  let activeTab = "oidc";
+
+  const renderModal = () => {
+    $("modal-root").innerHTML =
+      "<div class='bic-modal-backdrop is-open' role='presentation'>" +
+        "<div class='bic-modal bic-role-modal' role='dialog' aria-modal='true' aria-labelledby='app-modal-title' style='max-width:720px;'>" +
+          "<div class='bic-modal-header'>" +
+            "<div class='bic-action-row'>" +
+              "<div class='bic-stat-icon-wrap bic-stat-icon-applications' style='width:36px;height:36px;'>" + icon("lock") + "</div>" +
+              "<div>" +
+                "<p class='bic-kicker bic-mb-0'>OIDC CLIENT CONFIGURATION</p>" +
+                "<h3 id='app-modal-title' style='margin:0.2rem 0 0;font-size:1.15rem;'>" + esc(app.name) + " (" + esc(app.code) + ")</h3>" +
               "</div>" +
             "</div>" +
-            "<div class='bic-inline-form-actions'>" +
-              "<button type='submit' class='bic-btn bic-btn-primary bic-btn-sm'>Save Role</button>" +
-              "<button type='button' id='cancel-role-form' class='bic-btn bic-btn-secondary bic-btn-sm'>Cancel</button>" +
-            "</div>" +
-          "</form>" +
-          "<div class='bic-table-wrap'><table class='bic-table bic-sortable'><thead><tr><th>Role</th><th data-sort-type='number'>Permissions</th><th>Permission summary</th></tr></thead><tbody>" + roleRows + "</tbody></table></div>" +
+            "<button class='bic-icon-button' data-close-modal aria-label='Close'>✕</button>" +
+          "</div>" +
+
+          "<div class='bic-modal-tabs'>" +
+            "<button class='bic-modal-tab " + (activeTab === "oidc" ? "is-active" : "") + "' id='tab-btn-oidc'>" + icon("shield") + " OIDC &amp; Security</button>" +
+            "<button class='bic-modal-tab " + (activeTab === "uris" ? "is-active" : "") + "' id='tab-btn-uris'>" + icon("key") + " Redirect URIs (" + (app.redirect_uris || []).length + ")</button>" +
+          "</div>" +
+
+          "<div class='bic-modal-body' id='app-modal-body-content'></div>" +
+
+          "<div class='bic-modal-footer'>" +
+            "<button type='button' class='bic-btn bic-btn-secondary' data-close-modal>Close</button>" +
+          "</div>" +
         "</div>" +
-        "<div class='bic-card bic-panel'>" +
-          "<div class='bic-toolbar'><h3 class='bic-section-title'>Permissions</h3><span class='bic-muted'>" + appPermissions.length + " defined</span></div>" +
-          "<form id='form-create-permission' class='bic-inline-form-box bic-hidden'>" +
-            "<div class='bic-inline-form-header'>" +
-              "<strong class='bic-inline-form-title'>Create Permission</strong>" +
-              "<span class='bic-inline-form-app'>" + esc(applicationCode) + "</span>" +
+      "</div>";
+
+    document.querySelectorAll("[data-close-modal]").forEach((b) => b.onclick = closeModal);
+    $("tab-btn-oidc").onclick = () => { activeTab = "oidc"; renderTabBody(); renderModal(); };
+    $("tab-btn-uris").onclick = () => { activeTab = "uris"; renderTabBody(); renderModal(); };
+
+    renderTabBody();
+  };
+
+  const renderTabBody = () => {
+    const container = $("app-modal-body-content");
+    if (!container) return;
+
+    if (activeTab === "oidc") {
+      container.innerHTML =
+        "<form id='app-oidc-form'>" +
+          "<div class='bic-form-group'>" +
+            "<label class='bic-label'>Client ID (OAuth 2.0 / OIDC)</label>" +
+            "<div class='bic-input-group' style='display:flex;gap:0.5rem;'>" +
+              "<input class='bic-control' value='" + esc(app.client_id || app.code.toLowerCase()) + "' readonly style='background:#f8fafc;font-family:monospace;'>" +
+              "<button type='button' class='bic-btn bic-btn-secondary bic-btn-sm' id='copy-client-id-btn'>" + icon("copy") + " Copy</button>" +
             "</div>" +
-            "<div class='bic-inline-form-grid'>" +
-              "<div class='bic-form-group'>" +
-                "<label class='bic-label' for='new-perm-code'>Permission Code <span class='bic-text-danger'>*</span></label>" +
-                "<input class='bic-control' id='new-perm-code' placeholder='e.g. nms.device.view' required maxlength='120'>" +
-              "</div>" +
-              "<div class='bic-form-group'>" +
-                "<label class='bic-label' for='new-perm-desc'>Description</label>" +
-                "<input class='bic-control' id='new-perm-desc' placeholder='Brief summary of permission' maxlength='255'>" +
-              "</div>" +
+            "<span class='bic-help'>Unique identifier passed in authorization and token requests.</span>" +
+          "</div>" +
+
+          "<div class='bic-form-group'>" +
+            "<label class='bic-label'>Client Secret</label>" +
+            "<div class='bic-input-group' style='display:flex;gap:0.5rem;align-items:center;'>" +
+              "<input class='bic-control' id='client-secret-field' value='" + (app.has_client_secret ? "••••••••••••••••••••••••••••••••" : "No secret generated") + "' readonly style='background:#f8fafc;font-family:monospace;'>" +
+              "<button type='button' class='bic-btn bic-btn-warning bic-btn-sm' id='regen-secret-btn'>" + icon("refresh") + " Regenerate</button>" +
             "</div>" +
-            "<div class='bic-inline-form-actions'>" +
-              "<button type='submit' class='bic-btn bic-btn-primary bic-btn-sm'>Save Permission</button>" +
-              "<button type='button' id='cancel-permission-form' class='bic-btn bic-btn-secondary bic-btn-sm'>Cancel</button>" +
+            "<div id='new-secret-alert' class='bic-alert bic-alert-warning bic-hidden' style='margin-top:0.5rem;font-size:0.8rem;'></div>" +
+            "<span class='bic-help'>Used for confidential client token exchanges. Never expose in frontend/SPA clients.</span>" +
+          "</div>" +
+
+          "<div class='bic-grid-2' style='gap:1rem;margin-bottom:1rem;'>" +
+            "<div class='bic-form-group' style='margin-bottom:0;'>" +
+              "<label class='bic-label' for='app-client-type'>Client Type</label>" +
+              "<select class='bic-select' id='app-client-type'>" +
+                "<option value='confidential' " + (app.client_type === "confidential" ? "selected" : "") + ">Confidential (Server-side Web App)</option>" +
+                "<option value='public' " + (app.client_type === "public" ? "selected" : "") + ">Public (SPA / Mobile App)</option>" +
+              "</select>" +
             "</div>" +
-          "</form>" +
-          "<div class='bic-table-wrap'><table class='bic-table bic-sortable'><thead><tr><th>Code</th><th>Description</th></tr></thead><tbody>" + permissionRows + "</tbody></table></div>" +
+            "<div class='bic-form-group' style='margin-bottom:0;'>" +
+              "<label class='bic-label' for='app-status-sel'>Application Status</label>" +
+              "<select class='bic-select' id='app-status-sel'>" +
+                "<option value='active' " + (app.status === "active" ? "selected" : "") + ">Active</option>" +
+                "<option value='disabled' " + (app.status === "disabled" ? "selected" : "") + ">Disabled</option>" +
+              "</select>" +
+            "</div>" +
+          "</div>" +
+
+          "<div class='bic-grid-2' style='gap:1rem;margin-bottom:1rem;'>" +
+            "<div class='bic-form-group' style='margin-bottom:0;'>" +
+              "<label class='bic-label' for='app-access-lifetime'>Access Token Lifetime (seconds)</label>" +
+              "<input class='bic-control' type='number' id='app-access-lifetime' value='" + (app.access_token_lifetime || 3600) + "' min='60' max='86400'>" +
+            "</div>" +
+            "<div class='bic-form-group' style='margin-bottom:0;'>" +
+              "<label class='bic-label' for='app-id-lifetime'>ID Token Lifetime (seconds)</label>" +
+              "<input class='bic-control' type='number' id='app-id-lifetime' value='" + (app.id_token_lifetime || 3600) + "' min='60' max='86400'>" +
+            "</div>" +
+          "</div>" +
+
+          "<div class='bic-form-group'>" +
+            "<label class='bic-label'>Consent Screen</label>" +
+            "<label class='bic-table-check'><input type='checkbox' id='app-require-consent' " + (app.require_consent ? "checked" : "") + "><span>Prompt users for consent on first login</span></label>" +
+          "</div>" +
+
+          "<div style='display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1.5rem;'>" +
+            "<button type='submit' class='bic-btn bic-btn-primary'>Save OIDC Settings</button>" +
+          "</div>" +
+        "</form>";
+
+      $("copy-client-id-btn").onclick = () => {
+        navigator.clipboard.writeText(app.client_id || app.code.toLowerCase());
+        showToast("Client ID copied to clipboard");
+      };
+
+      $("regen-secret-btn").onclick = async () => {
+        if (!confirm("Regenerating the client secret will invalidate the existing secret immediately. Integrated services using the old secret will fail until updated. Continue?")) return;
+        try {
+          const res = await api("/v1/admin/applications/" + app.id + "/regenerate-secret", { method: "POST" });
+          $("client-secret-field").value = res.client_secret;
+          $("new-secret-alert").innerHTML = "<strong>New Client Secret Generated:</strong><br><code style='user-select:all;'>" + esc(res.client_secret) + "</code><br><small>Copy and store this secret securely. It will not be shown again.</small>";
+          $("new-secret-alert").classList.remove("bic-hidden");
+          showToast("Client secret regenerated successfully");
+          app.has_client_secret = true;
+        } catch (err) { showToast(err.message, true); }
+      };
+
+      $("app-oidc-form").onsubmit = async (e) => {
+        e.preventDefault();
+        try {
+          await api("/v1/admin/applications/" + app.id, {
+            method: "PUT",
+            body: JSON.stringify({
+              client_type: $("app-client-type").value,
+              status: $("app-status-sel").value,
+              access_token_lifetime: parseInt($("app-access-lifetime").value, 10),
+              id_token_lifetime: parseInt($("app-id-lifetime").value, 10),
+              require_consent: $("app-require-consent").checked,
+            })
+          });
+          showToast("OIDC configuration updated");
+          closeModal();
+          await renderApplications();
+        } catch (err) { showToast(err.message, true); }
+      };
+
+    } else if (activeTab === "uris") {
+      const uris = app.redirect_uris || [];
+      container.innerHTML =
+        "<p class='bic-muted' style='font-size:0.8125rem;margin-top:0;'>Exact URL matching is enforced. Wildcards (<code>*</code>) and fragments (<code>#</code>) are rejected per RFC 6749 and OIDC Core 1.0.</p>" +
+        "<form id='add-uri-form' style='display:flex;gap:0.5rem;margin-bottom:1rem;'>" +
+          "<input class='bic-control' id='new-redirect-uri' placeholder='e.g. http://localhost:8081/auth/callback' required style='flex:1;'>" +
+          "<button type='submit' class='bic-btn bic-btn-primary bic-btn-sm'>" + icon("plus") + " Add URI</button>" +
+        "</form>" +
+        "<div class='bic-table-wrap'>" +
+          "<table class='bic-table' style='font-size:0.8125rem;'>" +
+            "<thead><tr><th>Allowed Callback / Redirect URI</th><th>Added</th><th class='bic-text-right'>Action</th></tr></thead>" +
+            "<tbody>" +
+              (uris.length ? uris.map((u) =>
+                "<tr>" +
+                  "<td><code>" + esc(u.uri) + "</code></td>" +
+                  "<td>" + (u.created_at ? new Date(u.created_at).toLocaleDateString() : "—") + "</td>" +
+                  "<td class='bic-text-right'><button class='bic-btn bic-btn-danger bic-btn-sm' data-del-uri='" + esc(u.id) + "' style='padding:0.2rem 0.5rem;font-size:0.7rem;'>Remove</button></td>" +
+                "</tr>"
+              ).join("") : "<tr><td colspan='3' class='bic-empty'>No redirect URIs registered. This client cannot initiate OIDC authorization flows until a valid callback URL is added.</td></tr>") +
+            "</tbody>" +
+          "</table>" +
+        "</div>";
+
+      $("add-uri-form").onsubmit = async (e) => {
+        e.preventDefault();
+        const uri = $("new-redirect-uri").value.trim();
+        try {
+          const res = await api("/v1/admin/applications/" + app.id + "/redirect-uris", {
+            method: "POST",
+            body: JSON.stringify({ uri })
+          });
+          if (!app.redirect_uris) app.redirect_uris = [];
+          app.redirect_uris.push(res);
+          showToast("Redirect URI registered");
+          renderModal();
+        } catch (err) { showToast(err.message, true); }
+      };
+
+      document.querySelectorAll("[data-del-uri]").forEach((btn) => {
+        btn.onclick = async () => {
+          const uid = btn.dataset.delUri;
+          try {
+            await api("/v1/admin/applications/" + app.id + "/redirect-uris/" + uid, { method: "DELETE" });
+            app.redirect_uris = (app.redirect_uris || []).filter((u) => u.id !== uid);
+            showToast("Redirect URI removed");
+            renderModal();
+          } catch (err) { showToast(err.message, true); }
+        };
+      });
+    }
+  };
+
+  renderModal();
+}
+
+const rbacState = {
+  activeTab: "roles",
+  searchQuery: "",
+  appFilter: "",
+  typeFilter: "",
+  matrixApp: "",
+};
+
+async function renderRBAC() {
+  const [applications, roles, permissions, users] = await Promise.all([
+    api("/v1/admin/applications"),
+    api("/v1/admin/roles"),
+    api("/v1/admin/permissions"),
+    api("/v1/admin/users")
+  ]);
+
+  if (!rbacState.matrixApp && applications.length > 0) {
+    const defaultApp = applications.find(a => a.code === "HELPDESK") || applications[0];
+    rbacState.matrixApp = defaultApp.code;
+  }
+
+  const appOptions = "<option value=''>All Applications</option>" + applications.map((a) => "<option value='" + esc(a.code) + "' " + (rbacState.appFilter === a.code ? "selected" : "") + ">" + esc(a.name) + " (" + esc(a.code) + ")</option>").join("");
+
+  $("section-rbac").innerHTML =
+    "<div class='bic-page-header'>" +
+      "<div>" +
+        "<p class='bic-kicker'>AUTHORIZATION &amp; ACCESS CONTROL</p>" +
+        "<h2 class='bic-page-title'>Roles &amp; permissions</h2>" +
+        "<p class='bic-page-subtitle'>Manage application roles, organizational roles, permission matrices, and user privilege assignments across the enterprise.</p>" +
+      "</div>" +
+      "<div class='bic-action-row'>" +
+        "<button id='rbac-new-role' class='bic-btn bic-btn-primary bic-btn-sm'>" + icon("plus") + " New role</button>" +
+        "<button id='rbac-new-perm' class='bic-btn bic-btn-secondary bic-btn-sm'>" + icon("plus") + " New permission</button>" +
+      "</div>" +
+    "</div>" +
+
+    "<nav class='bic-nav-tabs' role='tablist'>" +
+      "<button class='bic-tab-item " + (rbacState.activeTab === "roles" ? "is-active" : "") + "' data-rbac-tab='roles'>" + icon("shield") + "<span>Roles</span><span class='bic-tab-badge'>" + roles.length + "</span></button>" +
+      "<button class='bic-tab-item " + (rbacState.activeTab === "matrix" ? "is-active" : "") + "' data-rbac-tab='matrix'>" + icon("matrix") + "<span>Permission Matrix</span></button>" +
+      "<button class='bic-tab-item " + (rbacState.activeTab === "permissions" ? "is-active" : "") + "' data-rbac-tab='permissions'>" + icon("key") + "<span>Permissions Catalog</span><span class='bic-tab-badge'>" + permissions.length + "</span></button>" +
+      "<button class='bic-tab-item " + (rbacState.activeTab === "org_roles" ? "is-active" : "") + "' data-rbac-tab='org_roles'>" + icon("users") + "<span>Organizational Roles</span><span class='bic-tab-badge'>4 Tiers</span></button>" +
+    "</nav>" +
+
+    "<div id='rbac-tab-content'></div>";
+
+  // Attach Tab navigation handlers
+  document.querySelectorAll("[data-rbac-tab]").forEach((btn) => {
+    btn.onclick = () => {
+      rbacState.activeTab = btn.dataset.rbacTab;
+      renderRBACTabContent(applications, roles, permissions, users);
+      document.querySelectorAll("[data-rbac-tab]").forEach((b) => b.classList.toggle("is-active", b.dataset.rbacTab === rbacState.activeTab));
+    };
+  });
+
+  $("rbac-new-role").onclick = () => openRoleForm(null, applications, permissions);
+  $("rbac-new-perm").onclick = () => openPermissionForm(applications);
+
+  renderRBACTabContent(applications, roles, permissions, users);
+}
+
+function renderRBACTabContent(applications, roles, permissions, users) {
+  const container = $("rbac-tab-content");
+  if (!container) return;
+
+  if (rbacState.activeTab === "roles") {
+    renderRBACRolesView(container, applications, roles, permissions, users);
+  } else if (rbacState.activeTab === "matrix") {
+    renderRBACMatrixView(container, applications, roles, permissions);
+  } else if (rbacState.activeTab === "permissions") {
+    renderRBACPermissionsView(container, applications, permissions, roles);
+  } else if (rbacState.activeTab === "org_roles") {
+    renderRBACOrgRolesView(container, users);
+  }
+}
+
+function renderRBACRolesView(container, applications, roles, permissions, users) {
+  const appOptions = "<option value=''>All Applications</option>" + applications.map((a) => "<option value='" + esc(a.code) + "' " + (rbacState.appFilter === a.code ? "selected" : "") + ">" + esc(a.name) + "</option>").join("");
+  const typeOptions =
+    "<option value=''>All Types</option>" +
+    "<option value='application' " + (rbacState.typeFilter === "application" ? "selected" : "") + ">Application Roles</option>" +
+    "<option value='system' " + (rbacState.typeFilter === "system" ? "selected" : "") + ">System Roles</option>" +
+    "<option value='organizational' " + (rbacState.typeFilter === "organizational" ? "selected" : "") + ">Organizational Roles</option>";
+
+  container.innerHTML =
+    "<div class='bic-card bic-panel'>" +
+      "<div class='bic-table-toolbar'>" +
+        "<div class='bic-toolbar-filter-group'>" +
+          "<div class='bic-search-input-wrap'>" +
+            "<svg class='bic-search-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>" +
+            "<input class='bic-control bic-search-control' id='rbac-role-search' type='search' placeholder='Search roles, description, permissions...' value='" + esc(rbacState.searchQuery) + "' aria-label='Search roles'>" +
+          "</div>" +
+          "<select class='bic-select bic-filter-select' id='rbac-role-app-filter' aria-label='Filter by application'>" + appOptions + "</select>" +
+          "<select class='bic-select bic-filter-select' id='rbac-role-type-filter' aria-label='Filter by type'>" + typeOptions + "</select>" +
+        "</div>" +
+        "<div class='bic-toolbar-meta'>" +
+          "<span class='bic-badge bic-badge-info' id='rbac-filtered-count'>" + roles.length + " roles</span>" +
         "</div>" +
       "</div>" +
-      "<div class='bic-card bic-panel bic-section-spaced'><div class='bic-toolbar'><div><h3 class='bic-section-title'>Assign permissions</h3><span class='bic-muted'>Only roles and permissions from " + esc(applicationCode) + " are shown.</span></div></div><div class='bic-action-row'><select class='bic-select' id='permission-role' aria-label='Select role'>" + appRoles.map((role) => "<option value='" + esc(role.id) + "'>" + esc(role.name) + "</option>").join("") + "</select><select class='bic-select' id='role-permission' aria-label='Select permission'>" + appPermissions.map((permission) => "<option value='" + esc(permission.id) + "'>" + esc(permission.code) + "</option>").join("") + "</select><button class='bic-btn bic-btn-primary' id='assign-permission-button' " + (!appRoles.length || !appPermissions.length ? "disabled" : "") + ">Assign permission</button></div></div>";
-    
-    enableTableSorting($("section-rbac"));
-    $("rbac-application").onchange = (event) => render(event.target.value);
+      "<div class='bic-table-wrap'>" +
+        "<table class='bic-table bic-sortable' id='rbac-roles-table'>" +
+          "<thead>" +
+            "<tr>" +
+              "<th>Role Name</th>" +
+              "<th>Application</th>" +
+              "<th>Type</th>" +
+              "<th>Permissions</th>" +
+              "<th>Assigned Users</th>" +
+              "<th data-sortable='false' class='bic-text-right'>Actions</th>" +
+            "</tr>" +
+          "</thead>" +
+          "<tbody id='rbac-roles-tbody'></tbody>" +
+        "</table>" +
+      "</div>" +
+    "</div>";
 
-    const roleForm = $("form-create-role");
-    const permForm = $("form-create-permission");
+  const renderRows = () => {
+    const query = (rbacState.searchQuery || "").trim().toLowerCase();
+    const appF = (rbacState.appFilter || "").trim().toLowerCase();
+    const typeF = (rbacState.typeFilter || "").trim().toLowerCase();
 
-    $("toggle-role-form").onclick = () => {
-      roleForm.classList.toggle("bic-hidden");
-      if (!roleForm.classList.contains("bic-hidden")) $("new-role-name")?.focus();
-    };
-    $("cancel-role-form").onclick = () => roleForm.classList.add("bic-hidden");
+    const filtered = roles.filter((r) => {
+      const haystack = [r.name, r.description || "", r.application_code, r.role_type, ...(r.permissions || [])].join(" ").toLowerCase();
+      const matchQuery = !query || haystack.includes(query);
+      const matchApp = !appF || (r.application_code || "").toLowerCase() === appF;
+      const matchType = !typeF || (r.role_type || "").toLowerCase() === typeF;
+      return matchQuery && matchApp && matchType;
+    });
 
-    $("toggle-permission-form").onclick = () => {
-      permForm.classList.toggle("bic-hidden");
-      if (!permForm.classList.contains("bic-hidden")) $("new-perm-code")?.focus();
-    };
-    $("cancel-permission-form").onclick = () => permForm.classList.add("bic-hidden");
+    $("rbac-filtered-count").textContent = filtered.length + " role" + (filtered.length === 1 ? "" : "s");
 
-    roleForm.onsubmit = async (event) => {
-      event.preventDefault();
-      const name = $("new-role-name").value.trim();
-      const description = $("new-role-desc").value.trim() || null;
-      if (!name) return;
-      try {
-        await api("/v1/admin/roles", {method:"POST", body:JSON.stringify({application_code:applicationCode, name, description})});
-        showToast("Role created");
-        await renderRBAC();
-      } catch (error) { showToast(error.message, true); }
-    };
+    $("rbac-roles-tbody").innerHTML = filtered.length ? filtered.map((r) => {
+      const typeBadge = r.is_system
+        ? "<span class='bic-badge bic-badge-dark' title='Protected system-level role'>System</span>"
+        : (r.role_type === "organizational"
+            ? "<span class='bic-badge bic-badge-purple' title='Central Auth Governance role'>Organizational</span>"
+            : "<span class='bic-badge bic-badge-info' title='Application feature role'>Application</span>");
 
-    permForm.onsubmit = async (event) => {
-      event.preventDefault();
-      const code = $("new-perm-code").value.trim();
-      const description = $("new-perm-desc").value.trim() || null;
-      if (!code) return;
-      try {
-        await api("/v1/admin/permissions", {method:"POST", body:JSON.stringify({application_code:applicationCode, code, description})});
-        showToast("Permission created");
-        await renderRBAC();
-      } catch (error) { showToast(error.message, true); }
-    };
+      const permBadge = "<span class='bic-badge bic-badge-primary' title='" + esc(r.permissions.slice(0, 5).join(", ")) + (r.permissions.length > 5 ? "..." : "") + "'>" + r.permission_count + " perms</span>";
+      const userBadge = "<span class='bic-badge " + (r.user_count > 0 ? "bic-badge-success" : "bic-badge-warning") + "'>" + r.user_count + " user" + (r.user_count === 1 ? "" : "s") + "</span>";
 
-    $("assign-permission-button").onclick = async () => {
-      if (!$("permission-role").value || !$("role-permission").value) return showToast("Create a role and permission first", true);
-      try { await api("/v1/admin/roles/" + $("permission-role").value + "/permissions", {method:"POST", body:JSON.stringify({permission_id:$("role-permission").value})}); showToast("Permission assigned"); await renderRBAC(); }
-      catch (error) { showToast(error.message, true); }
-    };
+      return "<tr>" +
+        "<td>" +
+          "<div class='bic-user-names'>" +
+            "<strong class='bic-user-name-title'>" + esc(r.name) + "</strong>" +
+            "<span class='bic-user-handle'>" + esc(r.description || "No description provided.") + "</span>" +
+          "</div>" +
+        "</td>" +
+        "<td><span class='bic-app-tag'>" + esc(r.application_code) + "</span></td>" +
+        "<td>" + typeBadge + "</td>" +
+        "<td>" + permBadge + "</td>" +
+        "<td>" + userBadge + "</td>" +
+        "<td class='bic-text-right'>" +
+          "<div class='bic-action-row bic-justify-end'>" +
+            "<button class='bic-icon-action' data-role-details='" + esc(r.id) + "' title='View role details & permissions' aria-label='View role details'>" + icon("eye") + "</button>" +
+            "<button class='bic-icon-action' data-role-edit='" + esc(r.id) + "' title='Edit role definition' aria-label='Edit role'>" + icon("edit") + "</button>" +
+            "<button class='bic-icon-action' data-role-clone='" + esc(r.id) + "' title='Clone role' aria-label='Clone role'>" + icon("copy") + "</button>" +
+            "<button class='bic-icon-action bic-icon-action-danger' data-role-delete='" + esc(r.id) + "' " + (r.is_system ? "disabled title='System roles cannot be deleted'" : "title='Delete role'") + " aria-label='Delete role'>" + icon("trash") + "</button>" +
+          "</div>" +
+        "</td>" +
+      "</tr>";
+    }).join("") : "<tr><td colspan='6' class='bic-empty'>No roles match the search criteria.</td></tr>";
+
+    // Bind action buttons
+    document.querySelectorAll("[data-role-details]").forEach((b) => b.onclick = () => openRoleDetailsModal(b.dataset.roleDetails, applications, permissions, users));
+    document.querySelectorAll("[data-role-edit]").forEach((b) => {
+      b.onclick = () => {
+        const role = roles.find((r) => r.id === b.dataset.roleEdit);
+        if (role) openRoleForm(role, applications, permissions);
+      };
+    });
+    document.querySelectorAll("[data-role-clone]").forEach((b) => {
+      b.onclick = () => {
+        const role = roles.find((r) => r.id === b.dataset.roleClone);
+        if (role) openRoleForm(role, applications, permissions, true);
+      };
+    });
+    document.querySelectorAll("[data-role-delete]").forEach((b) => {
+      b.onclick = () => {
+        const role = roles.find((r) => r.id === b.dataset.roleDelete);
+        if (role) deleteRole(role.id, role.name, role.is_system);
+      };
+    });
   };
-  render(applications[0]?.code || "");
+
+  $("rbac-role-search").oninput = (e) => { rbacState.searchQuery = e.target.value; renderRows(); };
+  $("rbac-role-app-filter").onchange = (e) => { rbacState.appFilter = e.target.value; renderRows(); };
+  $("rbac-role-type-filter").onchange = (e) => { rbacState.typeFilter = e.target.value; renderRows(); };
+
+  renderRows();
+  enableTableSorting($("rbac-roles-table"));
+}
+
+function renderRBACMatrixView(container, applications, roles, permissions) {
+  const currentApp = applications.find((a) => a.code === rbacState.matrixApp) || applications[0];
+  if (!currentApp) {
+    container.innerHTML = "<div class='bic-empty'>No applications configured.</div>";
+    return;
+  }
+
+  const appRoles = roles.filter((r) => r.application_code === currentApp.code);
+  const appPerms = permissions.filter((p) => p.application_code === currentApp.code);
+
+  // Group permissions by module
+  const moduleGroups = {};
+  appPerms.forEach((p) => {
+    const mod = p.module || "General";
+    if (!moduleGroups[mod]) moduleGroups[mod] = [];
+    moduleGroups[mod].push(p);
+  });
+
+  const appPills = applications.map((a) =>
+    "<button class='bic-btn " + (a.code === currentApp.code ? "bic-btn-primary" : "bic-btn-secondary") + " bic-btn-sm' data-matrix-app='" + esc(a.code) + "'>" +
+      esc(a.name) + " (" + esc(a.code) + ")" +
+    "</button>"
+  ).join(" ");
+
+  container.innerHTML =
+    "<div class='bic-card bic-panel'>" +
+      "<div class='bic-table-toolbar'>" +
+        "<div>" +
+          "<h3 class='bic-section-title'>Permission Matrix — " + esc(currentApp.name) + "</h3>" +
+          "<span class='bic-muted'>Cross-tabulation of roles vs. granted permission flags</span>" +
+        "</div>" +
+        "<div class='bic-action-row'>" + appPills + "</div>" +
+      "</div>" +
+      "<div class='bic-matrix-wrap'>" +
+        "<table class='bic-matrix-table'>" +
+          "<thead>" +
+            "<tr>" +
+              "<th class='bic-matrix-sticky-col' style='min-width:280px;'>Permission / Module</th>" +
+              appRoles.map((r) => "<th class='bic-text-center' style='min-width:120px;'>" + esc(r.name) + "</th>").join("") +
+            "</tr>" +
+          "</thead>" +
+          "<tbody>" +
+            (Object.keys(moduleGroups).length ? Object.entries(moduleGroups).map(([modName, perms]) => {
+              const headerRow = "<tr class='bic-matrix-module-row'><td colspan='" + (appRoles.length + 1) + "'>" + esc(modName) + " (" + perms.length + ")</td></tr>";
+              const permRows = perms.map((p) => {
+                return "<tr>" +
+                  "<td class='bic-matrix-sticky-col'>" +
+                    "<div><code>" + esc(p.code) + "</code></div>" +
+                    "<small class='bic-muted'>" + esc(p.description || "") + "</small>" +
+                  "</td>" +
+                  appRoles.map((r) => {
+                    const hasPerm = (r.permissions || []).includes(p.code);
+                    return "<td class='bic-matrix-cell'>" + (hasPerm ? "<span class='bic-matrix-check'>✓</span>" : "<span class='bic-matrix-dash'>—</span>") + "</td>";
+                  }).join("") +
+                "</tr>";
+              }).join("");
+              return headerRow + permRows;
+            }).join("") : "<tr><td colspan='" + (appRoles.length + 1) + "' class='bic-empty'>No permissions defined for " + esc(currentApp.name) + ".</td></tr>") +
+          "</tbody>" +
+        "</table>" +
+      "</div>" +
+    "</div>";
+
+  document.querySelectorAll("[data-matrix-app]").forEach((btn) => {
+    btn.onclick = () => {
+      rbacState.matrixApp = btn.dataset.matrixApp;
+      renderRBACMatrixView(container, applications, roles, permissions);
+    };
+  });
+}
+
+function renderRBACPermissionsView(container, applications, permissions, roles) {
+  container.innerHTML =
+    "<div class='bic-card bic-panel'>" +
+      "<div class='bic-table-toolbar'>" +
+        "<div class='bic-toolbar-filter-group'>" +
+          "<div class='bic-search-input-wrap'>" +
+            "<svg class='bic-search-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>" +
+            "<input class='bic-control bic-search-control' id='rbac-perm-search' type='search' placeholder='Search permission code, module, description...' aria-label='Search permissions'>" +
+          "</div>" +
+        "</div>" +
+        "<div class='bic-toolbar-meta'>" +
+          "<span class='bic-badge bic-badge-info'>" + permissions.length + " permissions</span>" +
+        "</div>" +
+      "</div>" +
+      "<div class='bic-table-wrap'>" +
+        "<table class='bic-table bic-sortable' id='rbac-perms-table'>" +
+          "<thead>" +
+            "<tr>" +
+              "<th>Permission Code</th>" +
+              "<th>Module</th>" +
+              "<th>Application</th>" +
+              "<th>Description</th>" +
+              "<th>Granted in Roles</th>" +
+            "</tr>" +
+          "</thead>" +
+          "<tbody id='rbac-perms-tbody'></tbody>" +
+        "</table>" +
+      "</div>" +
+    "</div>";
+
+  const renderRows = () => {
+    const query = ($("rbac-perm-search")?.value || "").trim().toLowerCase();
+    const filtered = permissions.filter((p) => {
+      const haystack = [p.code, p.module || "", p.application_code || "", p.description || "", ...(p.roles || [])].join(" ").toLowerCase();
+      return !query || haystack.includes(query);
+    });
+
+    $("rbac-perms-tbody").innerHTML = filtered.length ? filtered.map((p) => {
+      const roleBadges = (p.roles || []).length ? p.roles.map((r) => "<span class='bic-badge bic-badge-primary'>" + esc(r) + "</span>").join(" ") : "<span class='bic-muted'>None</span>";
+      return "<tr>" +
+        "<td><code>" + esc(p.code) + "</code></td>" +
+        "<td><span class='bic-badge bic-badge-info'>" + esc(p.module || "General") + "</span></td>" +
+        "<td><span class='bic-app-tag'>" + esc(p.application_code) + "</span></td>" +
+        "<td>" + esc(p.description || "—") + "</td>" +
+        "<td><div class='bic-action-row'>" + roleBadges + "</div></td>" +
+      "</tr>";
+    }).join("") : "<tr><td colspan='5' class='bic-empty'>No permissions match query.</td></tr>";
+  };
+
+  $("rbac-perm-search").oninput = renderRows;
+  renderRows();
+  enableTableSorting($("rbac-perms-table"));
+}
+
+function renderRBACOrgRolesView(container, users) {
+  const tiers = [
+    {
+      key: "system_administrator",
+      title: "System Administrator",
+      badge: "<span class='bic-badge bic-badge-purple'>System Administrator</span>",
+      icon: "shield",
+      desc: "Super administrator holding full root permissions across Central Auth, system configurations, and security bypass authorities.",
+      users: users.filter((u) => u.is_superadmin || u.org_role === "system_administrator"),
+    },
+    {
+      key: "general_manager",
+      title: "General Manager",
+      badge: "<span class='bic-badge bic-badge-warning'>General Manager</span>",
+      icon: "users",
+      desc: "Executive authority designated for second-level and cross-division ticket approvals, budget sign-offs, and company-wide workflows.",
+      users: users.filter((u) => (u.position?.is_general_manager || u.org_role === "general_manager") && !u.is_superadmin),
+    },
+    {
+      key: "manager",
+      title: "Manager",
+      badge: "<span class='bic-badge bic-badge-primary'>Manager</span>",
+      icon: "users",
+      desc: "Division or Department manager responsible for first-level operational ticket approvals and direct report supervisions.",
+      users: users.filter((u) => (u.position?.is_manager && !u.position?.is_general_manager || u.org_role === "manager") && !u.is_superadmin),
+    },
+    {
+      key: "employee",
+      title: "Standard Employee",
+      badge: "<span class='bic-badge bic-badge-info'>Employee</span>",
+      icon: "users",
+      desc: "Standard corporate contributor permitted to create requests, view personal tickets, and consume authorized company applications.",
+      users: users.filter((u) => !u.is_superadmin && !u.position?.is_manager && !u.position?.is_general_manager && u.org_role !== "general_manager" && u.org_role !== "manager"),
+    }
+  ];
+
+  container.innerHTML =
+    "<div class='bic-grid-2'>" +
+      tiers.map((t) => {
+        const userList = t.users.slice(0, 8).map((u) =>
+          "<div class='bic-user-chip' style='margin-bottom:0.5rem;'>" +
+            "<div class='bic-user-avatar bic-user-avatar-sm'>" + esc(getInitials(u.full_name || u.username)) + "</div>" +
+            "<div>" +
+              "<strong class='bic-user-name'>" + esc(u.full_name) + "</strong>" +
+              "<small class='bic-muted'>" + esc(u.position?.name || u.division?.name || "@" + u.username) + "</small>" +
+            "</div>" +
+          "</div>"
+        ).join("") || "<span class='bic-muted'>No users assigned to this tier.</span>";
+
+        return "<div class='bic-card bic-panel'>" +
+          "<div class='bic-table-toolbar' style='margin-bottom:0.75rem;'>" +
+            "<div class='bic-action-row'>" + icon(t.icon) + "<strong style='font-size:1.05rem;'>" + esc(t.title) + "</strong></div>" +
+            t.badge +
+          "</div>" +
+          "<p class='bic-muted' style='font-size:0.8125rem;margin-bottom:1rem;line-height:1.4;'>" + esc(t.desc) + "</p>" +
+          "<div style='border-top:1px solid var(--bic-border);padding-top:0.75rem;'>" +
+            "<div style='font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--bic-text-secondary);margin-bottom:0.5rem;letter-spacing:0.04em;'>Assigned Users (" + t.users.length + ")</div>" +
+            userList +
+            (t.users.length > 8 ? "<small class='bic-muted'>+ " + (t.users.length - 8) + " more users</small>" : "") +
+          "</div>" +
+        "</div>";
+      }).join("") +
+    "</div>";
+}
+
+async function openRoleDetailsModal(roleId, applications, allPermissions, allUsers) {
+  try {
+    const role = await api("/v1/admin/roles/" + roleId);
+    let modalTab = "overview";
+
+    const renderModalBody = () => {
+      const modalBody = $("role-modal-body-container");
+      if (!modalBody) return;
+
+      if (modalTab === "overview") {
+        modalBody.innerHTML =
+          "<div class='bic-role-stat-grid'>" +
+            "<div class='bic-role-stat-card'>" +
+              "<span class='bic-role-stat-label'>Application</span>" +
+              "<span class='bic-role-stat-val'>" + esc(role.application_code) + "</span>" +
+            "</div>" +
+            "<div class='bic-role-stat-card'>" +
+              "<span class='bic-role-stat-label'>Granted Permissions</span>" +
+              "<span class='bic-role-stat-val'>" + role.permission_count + "</span>" +
+            "</div>" +
+            "<div class='bic-role-stat-card'>" +
+              "<span class='bic-role-stat-label'>Assigned Users</span>" +
+              "<span class='bic-role-stat-val'>" + role.user_count + "</span>" +
+            "</div>" +
+          "</div>" +
+          "<div class='bic-form-group'>" +
+            "<label class='bic-label'>Role Description</label>" +
+            "<p class='bic-muted' style='margin:0;line-height:1.5;'>" + esc(role.description || "No description provided.") + "</p>" +
+          "</div>" +
+          "<div class='bic-form-group'>" +
+            "<label class='bic-label'>Role Metadata</label>" +
+            "<table class='bic-table' style='font-size:0.8rem;'>" +
+              "<tr><td style='width:30%;font-weight:600;'>Role ID</td><td><code>" + esc(role.id) + "</code></td></tr>" +
+              "<tr><td style='font-weight:600;'>Application Code</td><td><span class='bic-app-tag'>" + esc(role.application_code) + "</span></td></tr>" +
+              "<tr><td style='font-weight:600;'>Role Type</td><td>" + (role.is_system ? "<span class='bic-badge bic-badge-dark'>System Protected</span>" : "<span class='bic-badge bic-badge-info'>Application Scoped</span>") + "</td></tr>" +
+              "<tr><td style='font-weight:600;'>Created At</td><td>" + (role.created_at ? new Date(role.created_at).toLocaleString() : "—") + "</td></tr>" +
+            "</table>" +
+          "</div>";
+      } else if (modalTab === "permissions") {
+        // Group permissions by module
+        const moduleGroups = {};
+        role.permissions.forEach((p) => {
+          const mod = p.module || "General";
+          if (!moduleGroups[mod]) moduleGroups[mod] = [];
+          moduleGroups[mod].push(p);
+        });
+
+        modalBody.innerHTML = Object.keys(moduleGroups).length ? Object.entries(moduleGroups).map(([modName, perms]) => {
+          return "<div class='bic-perm-module-card'>" +
+            "<div class='bic-perm-module-header'>" +
+              "<span class='bic-perm-module-title'>" + icon("shield") + esc(modName) + "</span>" +
+              "<span class='bic-badge bic-badge-primary'>" + perms.length + " granted</span>" +
+            "</div>" +
+            "<div class='bic-perm-grid'>" +
+              perms.map((p) =>
+                "<div class='bic-perm-item' style='cursor:default;'>" +
+                  "<span class='bic-matrix-check' style='flex-shrink:0;'>✓</span>" +
+                  "<div class='bic-perm-item-content'>" +
+                    "<span class='bic-perm-item-code'>" + esc(p.code) + "</span>" +
+                    "<span class='bic-perm-item-desc'>" + esc(p.description || "") + "</span>" +
+                  "</div>" +
+                "</div>"
+              ).join("") +
+            "</div>" +
+          "</div>";
+        }).join("") : "<div class='bic-empty'>No permissions currently assigned to this role.</div>";
+      } else if (modalTab === "users") {
+        modalBody.innerHTML =
+          "<div class='bic-table-toolbar' style='margin-bottom:0.75rem;'>" +
+            "<span class='bic-muted'>" + role.users.length + " assigned user" + (role.users.length === 1 ? "" : "s") + "</span>" +
+            "<button id='assign-users-btn' class='bic-btn bic-btn-primary bic-btn-sm'>" + icon("plus") + " Assign users</button>" +
+          "</div>" +
+          "<div class='bic-table-wrap'>" +
+            "<table class='bic-table' style='font-size:0.8rem;'>" +
+              "<thead><tr><th>User</th><th>Employee ID</th><th>Division / Position</th><th>Status</th><th class='bic-text-right'>Action</th></tr></thead>" +
+              "<tbody>" +
+                (role.users.length ? role.users.map((u) =>
+                  "<tr>" +
+                    "<td>" +
+                      "<div class='bic-user-chip'>" +
+                        "<div class='bic-user-avatar bic-user-avatar-sm'>" + esc(getInitials(u.full_name || u.username)) + "</div>" +
+                        "<div><strong>" + esc(u.full_name) + "</strong><small class='bic-muted'>@" + esc(u.username) + "</small></div>" +
+                      "</div>" +
+                    "</td>" +
+                    "<td>" + esc(u.employee_id || "—") + "</td>" +
+                    "<td>" + esc(u.division_name || "—") + " / " + esc(u.position_name || "—") + "</td>" +
+                    "<td>" + statusBadge(u.status) + "</td>" +
+                    "<td class='bic-text-right'>" +
+                      "<button class='bic-btn bic-btn-danger bic-btn-sm' data-remove-user-role='" + esc(u.id) + "' style='padding:0.2rem 0.5rem;font-size:0.7rem;'>Remove</button>" +
+                    "</td>" +
+                  "</tr>"
+                ).join("") : "<tr><td colspan='5' class='bic-empty'>No users assigned to this role yet.</td></tr>") +
+              "</tbody>" +
+            "</table>" +
+          "</div>";
+
+        $("assign-users-btn").onclick = () => openAssignUsersToRoleModal(role, allUsers, applications, allPermissions);
+        document.querySelectorAll("[data-remove-user-role]").forEach((btn) => {
+          btn.onclick = async () => {
+            const uid = btn.dataset.removeUserRole;
+            try {
+              await api("/v1/admin/roles/" + role.id + "/users/" + uid, { method: "DELETE" });
+              showToast("User removed from role");
+              openRoleDetailsModal(role.id, applications, allPermissions, allUsers);
+              await renderRBAC();
+            } catch (err) { showToast(err.message, true); }
+          };
+        });
+      }
+    };
+
+    $("modal-root").innerHTML =
+      "<div class='bic-modal-backdrop is-open' role='presentation'>" +
+        "<div class='bic-modal bic-role-modal' role='dialog' aria-modal='true' aria-labelledby='role-detail-title'>" +
+          "<div class='bic-modal-header'>" +
+            "<div class='bic-action-row'>" +
+              "<div class='bic-stat-icon-wrap bic-stat-icon-total' style='width:36px;height:36px;'>" + icon("shield") + "</div>" +
+              "<div>" +
+                "<div class='bic-action-row' style='gap:0.35rem;'>" +
+                  "<span class='bic-app-tag'>" + esc(role.application_code) + "</span>" +
+                  (role.is_system ? "<span class='bic-badge bic-badge-dark'>System</span>" : "") +
+                "</div>" +
+                "<h3 id='role-detail-title' style='margin:0.2rem 0 0;font-size:1.15rem;'>" + esc(role.name) + "</h3>" +
+              "</div>" +
+            "</div>" +
+            "<div class='bic-action-row'>" +
+              "<button class='bic-btn bic-btn-secondary bic-btn-sm' id='modal-edit-role-btn'>" + icon("edit") + " Edit</button>" +
+              "<button class='bic-icon-button' data-close-modal aria-label='Close'>✕</button>" +
+            "</div>" +
+          "</div>" +
+
+          "<div class='bic-modal-tabs'>" +
+            "<button class='bic-modal-tab is-active' data-role-modal-tab='overview'>" + icon("info") + " Overview</button>" +
+            "<button class='bic-modal-tab' data-role-modal-tab='permissions'>" + icon("key") + " Permissions (" + role.permission_count + ")</button>" +
+            "<button class='bic-modal-tab' data-role-modal-tab='users'>" + icon("users") + " Assigned Users (" + role.user_count + ")</button>" +
+          "</div>" +
+
+          "<div class='bic-modal-body' id='role-modal-body-container'></div>" +
+
+          "<div class='bic-modal-footer'>" +
+            "<button type='button' class='bic-btn bic-btn-secondary' data-close-modal>Close</button>" +
+          "</div>" +
+        "</div>" +
+      "</div>";
+
+    document.querySelectorAll("[data-close-modal]").forEach((b) => b.onclick = closeModal);
+
+    document.querySelectorAll("[data-role-modal-tab]").forEach((btn) => {
+      btn.onclick = () => {
+        modalTab = btn.dataset.roleModalTab;
+        document.querySelectorAll("[data-role-modal-tab]").forEach((b) => b.classList.toggle("is-active", b.dataset.roleModalTab === modalTab));
+        renderModalBody();
+      };
+    });
+
+    $("modal-edit-role-btn").onclick = () => {
+      closeModal();
+      openRoleForm(role, applications, allPermissions);
+    };
+
+    renderModalBody();
+  } catch (err) { showToast(err.message, true); }
+}
+
+function openRoleForm(role = null, applications = [], allPermissions = [], isClone = false) {
+  const editing = Boolean(role) && !isClone;
+  const cloning = Boolean(role) && isClone;
+  const currentAppCode = role ? role.application_code : (applications[0]?.code || "CENTRAL_AUTH");
+
+  let selectedPermIds = new Set(role ? (role.permission_ids || []) : []);
+  let activeAppCode = currentAppCode;
+
+  const title = cloning ? "Clone role: " + esc(role.name) : (editing ? "Edit role: " + esc(role.name) : "Create new role");
+  const initialName = cloning ? role.name + " Copy" : (role?.name || "");
+  const initialDesc = cloning ? (role.description ? role.description + " (Copy)" : "") : (role?.description || "");
+
+  const renderFormPermissions = () => {
+    const permContainer = $("role-form-perm-container");
+    if (!permContainer) return;
+
+    const appPerms = allPermissions.filter((p) => p.application_code === activeAppCode);
+    const moduleGroups = {};
+    appPerms.forEach((p) => {
+      const mod = p.module || "General";
+      if (!moduleGroups[mod]) moduleGroups[mod] = [];
+      moduleGroups[mod].push(p);
+    });
+
+    $("role-form-selected-count").textContent = selectedPermIds.size + " of " + appPerms.length + " permissions selected";
+
+    if (!appPerms.length) {
+      permContainer.innerHTML = "<div class='bic-empty'>No permissions defined for application " + esc(activeAppCode) + ".</div>";
+      return;
+    }
+
+    permContainer.innerHTML = Object.entries(moduleGroups).map(([modName, perms]) => {
+      const allSelectedInMod = perms.every((p) => selectedPermIds.has(p.id));
+      return "<div class='bic-perm-module-card'>" +
+        "<div class='bic-perm-module-header'>" +
+          "<span class='bic-perm-module-title'>" + icon("shield") + esc(modName) + " (" + perms.length + ")</span>" +
+          "<button type='button' class='bic-btn bic-btn-secondary bic-btn-sm' data-toggle-module='" + esc(modName) + "' style='font-size:0.7rem;padding:0.15rem 0.4rem;'>" + (allSelectedInMod ? "Deselect All" : "Select All") + "</button>" +
+        "</div>" +
+        "<div class='bic-perm-grid'>" +
+          perms.map((p) => {
+            const isChecked = selectedPermIds.has(p.id);
+            return "<label class='bic-perm-item'>" +
+              "<input type='checkbox' data-perm-id='" + esc(p.id) + "' data-perm-module='" + esc(modName) + "' " + (isChecked ? "checked" : "") + ">" +
+              "<div class='bic-perm-item-content'>" +
+                "<span class='bic-perm-item-code'>" + esc(p.code) + "</span>" +
+                "<span class='bic-perm-item-desc'>" + esc(p.description || "") + "</span>" +
+              "</div>" +
+            "</label>";
+          }).join("") +
+        "</div>" +
+      "</div>";
+    }).join("");
+
+    // Attach checkbox changes
+    permContainer.querySelectorAll("[data-perm-id]").forEach((cb) => {
+      cb.onchange = () => {
+        if (cb.checked) selectedPermIds.add(cb.dataset.permId);
+        else selectedPermIds.delete(cb.dataset.permId);
+        $("role-form-selected-count").textContent = selectedPermIds.size + " of " + appPerms.length + " permissions selected";
+      };
+    });
+
+    // Attach module toggle
+    permContainer.querySelectorAll("[data-toggle-module]").forEach((btn) => {
+      btn.onclick = () => {
+        const modName = btn.dataset.toggleModule;
+        const modPerms = moduleGroups[modName] || [];
+        const allSelected = modPerms.every((p) => selectedPermIds.has(p.id));
+        modPerms.forEach((p) => {
+          if (allSelected) selectedPermIds.delete(p.id);
+          else selectedPermIds.add(p.id);
+        });
+        renderFormPermissions();
+      };
+    });
+  };
+
+  const appOptions = applications.map((a) => "<option value='" + esc(a.code) + "' " + (a.code === activeAppCode ? "selected" : "") + ">" + esc(a.name) + " (" + esc(a.code) + ")</option>").join("");
+
+  $("modal-root").innerHTML =
+    "<div class='bic-modal-backdrop is-open' role='presentation'>" +
+      "<div class='bic-modal bic-role-modal' role='dialog' aria-modal='true' aria-labelledby='role-form-title'>" +
+        "<div class='bic-modal-header'>" +
+          "<div>" +
+            "<p class='bic-kicker'>ROLE CONFIGURATION</p>" +
+            "<h3 id='role-form-title' style='margin:0;font-size:1.15rem;'>" + title + "</h3>" +
+          "</div>" +
+          "<button class='bic-icon-button' data-close-modal aria-label='Close'>✕</button>" +
+        "</div>" +
+        "<form id='role-edit-form'>" +
+          "<div class='bic-modal-body'>" +
+            "<div class='bic-grid-2' style='gap:1rem;margin-bottom:1rem;'>" +
+              "<div class='bic-form-group' style='margin-bottom:0;'>" +
+                "<label class='bic-label' for='role-f-app'>Target Application</label>" +
+                "<select class='bic-select' id='role-f-app' " + (editing ? "disabled" : "required") + ">" + appOptions + "</select>" +
+              "</div>" +
+              "<div class='bic-form-group' style='margin-bottom:0;'>" +
+                "<label class='bic-label' for='role-f-name'>Role Name</label>" +
+                "<input class='bic-control' id='role-f-name' required maxlength='80' placeholder='e.g. Helpdesk Supervisor' value='" + esc(initialName) + "'>" +
+              "</div>" +
+            "</div>" +
+            "<div class='bic-form-group'>" +
+              "<label class='bic-label' for='role-f-desc'>Role Description</label>" +
+              "<input class='bic-control' id='role-f-desc' maxlength='500' placeholder='Define the responsibilities and access privileges granted by this role' value='" + esc(initialDesc) + "'>" +
+            "</div>" +
+            "<div class='bic-form-group'>" +
+              "<div class='bic-table-toolbar' style='margin-bottom:0.5rem;'>" +
+                "<label class='bic-label' style='margin:0;'>Permission Assignment</label>" +
+                "<span class='bic-badge bic-badge-info' id='role-form-selected-count'>0 selected</span>" +
+              "</div>" +
+              "<div id='role-form-perm-container' style='max-height:360px;overflow-y:auto;padding-right:0.25rem;'></div>" +
+            "</div>" +
+          "</div>" +
+          "<div class='bic-modal-footer'>" +
+            "<button type='button' class='bic-btn bic-btn-secondary' data-close-modal>Cancel</button>" +
+            "<button type='submit' class='bic-btn bic-btn-primary'>" + (editing ? "Save changes" : "Create role") + "</button>" +
+          "</div>" +
+        "</form>" +
+      "</div>" +
+    "</div>";
+
+  document.querySelectorAll("[data-close-modal]").forEach((b) => b.onclick = closeModal);
+
+  $("role-f-app").onchange = () => {
+    activeAppCode = $("role-f-app").value;
+    selectedPermIds.clear();
+    renderFormPermissions();
+  };
+
+  renderFormPermissions();
+
+  $("role-edit-form").onsubmit = async (e) => {
+    e.preventDefault();
+    const name = $("role-f-name").value.trim();
+    const description = $("role-f-desc").value.trim() || null;
+    const permission_ids = Array.from(selectedPermIds);
+
+    try {
+      if (editing) {
+        await api("/v1/admin/roles/" + role.id, {
+          method: "PUT",
+          body: JSON.stringify({ name, description, permission_ids })
+        });
+        showToast("Role updated successfully");
+      } else if (cloning) {
+        await api("/v1/admin/roles/" + role.id + "/clone", {
+          method: "POST",
+          body: JSON.stringify({ name, description })
+        });
+        showToast("Role cloned successfully");
+      } else {
+        await api("/v1/admin/roles", {
+          method: "POST",
+          body: JSON.stringify({ application_code: activeAppCode, name, description, permission_ids })
+        });
+        showToast("Role created successfully");
+      }
+      closeModal();
+      await renderRBAC();
+    } catch (err) { showToast(err.message, true); }
+  };
+}
+
+function openAssignUsersToRoleModal(role, allUsers, applications, allPermissions) {
+  const assignedUserIds = new Set((role.users || []).map((u) => u.id));
+  const activeCandidates = allUsers.filter((u) => u.status === "active");
+
+  $("modal-root").innerHTML =
+    "<div class='bic-modal-backdrop is-open' role='presentation'>" +
+      "<div class='bic-modal' role='dialog' aria-modal='true' aria-labelledby='assign-title'>" +
+        "<div class='bic-modal-header'>" +
+          "<div>" +
+            "<p class='bic-kicker'>USER ASSIGNMENT</p>" +
+            "<h3 id='assign-title' style='margin:0;'>Assign Users to " + esc(role.name) + "</h3>" +
+          "</div>" +
+          "<button class='bic-icon-button' data-close-modal aria-label='Close'>✕</button>" +
+        "</div>" +
+        "<form id='assign-users-form'>" +
+          "<div class='bic-modal-body'>" +
+            "<p class='bic-muted' style='font-size:0.8125rem;margin-top:0;'>Select active directory users to grant the <strong>" + esc(role.name) + "</strong> role.</p>" +
+            "<div class='bic-search-input-wrap' style='margin-bottom:0.75rem;'>" +
+              "<svg class='bic-search-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>" +
+              "<input class='bic-control bic-search-control' id='assign-user-search' type='search' placeholder='Search name, email, employee ID...'>" +
+            "</div>" +
+            "<div id='assign-users-list' style='max-height:280px;overflow-y:auto;display:grid;gap:0.35rem;'></div>" +
+          "</div>" +
+          "<div class='bic-modal-footer'>" +
+            "<button type='button' class='bic-btn bic-btn-secondary' data-close-modal>Cancel</button>" +
+            "<button type='submit' class='bic-btn bic-btn-primary'>Assign selected</button>" +
+          "</div>" +
+        "</form>" +
+      "</div>" +
+    "</div>";
+
+  document.querySelectorAll("[data-close-modal]").forEach((b) => b.onclick = closeModal);
+
+  const renderUserChecklist = () => {
+    const q = ($("assign-user-search")?.value || "").trim().toLowerCase();
+    const filtered = activeCandidates.filter((u) => {
+      const haystack = [u.full_name, u.username, u.email, u.employee_id || ""].join(" ").toLowerCase();
+      return !q || haystack.includes(q);
+    });
+
+    $("assign-users-list").innerHTML = filtered.length ? filtered.map((u) => {
+      const isAssigned = assignedUserIds.has(u.id);
+      return "<label class='bic-check-item' style='padding:0.4rem 0.6rem;'>" +
+        "<input type='checkbox' data-assign-uid='" + esc(u.id) + "' " + (isAssigned ? "checked" : "") + ">" +
+        "<div class='bic-user-chip' style='gap:0.5rem;'>" +
+          "<div class='bic-user-avatar bic-user-avatar-sm'>" + esc(getInitials(u.full_name || u.username)) + "</div>" +
+          "<div><strong>" + esc(u.full_name) + "</strong><small class='bic-muted'>" + esc(u.employee_id ? u.employee_id + " · " : "") + esc(u.email) + "</small></div>" +
+        "</div>" +
+      "</label>";
+    }).join("") : "<div class='bic-empty'>No users match query.</div>";
+  };
+
+  $("assign-user-search").oninput = renderUserChecklist;
+  renderUserChecklist();
+
+  $("assign-users-form").onsubmit = async (e) => {
+    e.preventDefault();
+    const selectedIds = Array.from(document.querySelectorAll("[data-assign-uid]:checked")).map((cb) => cb.dataset.assignUid);
+    try {
+      await api("/v1/admin/roles/" + role.id + "/users", {
+        method: "POST",
+        body: JSON.stringify({ user_ids: selectedIds })
+      });
+      showToast("Users assigned to role");
+      closeModal();
+      openRoleDetailsModal(role.id, applications, allPermissions, allUsers);
+      await renderRBAC();
+    } catch (err) { showToast(err.message, true); }
+  };
+}
+
+function openPermissionForm(applications) {
+  const appOptions = applications.map((a) => "<option value='" + esc(a.code) + "'>" + esc(a.name) + " (" + esc(a.code) + ")</option>").join("");
+
+  $("modal-root").innerHTML =
+    "<div class='bic-modal-backdrop is-open' role='presentation'>" +
+      "<div class='bic-modal' role='dialog' aria-modal='true' aria-labelledby='perm-form-title'>" +
+        "<div class='bic-modal-header'>" +
+          "<div>" +
+            "<p class='bic-kicker'>AUTHORIZATION</p>" +
+            "<h3 id='perm-form-title' style='margin:0;'>Create new permission</h3>" +
+          "</div>" +
+          "<button class='bic-icon-button' data-close-modal aria-label='Close'>✕</button>" +
+        "</div>" +
+        "<form id='new-perm-form'>" +
+          "<div class='bic-modal-body'>" +
+            "<div class='bic-form-group'>" +
+              "<label class='bic-label' for='new-perm-app'>Application</label>" +
+              "<select class='bic-select' id='new-perm-app' required>" + appOptions + "</select>" +
+            "</div>" +
+            "<div class='bic-form-group'>" +
+              "<label class='bic-label' for='new-perm-code'>Permission Code</label>" +
+              "<input class='bic-control' id='new-perm-code' required minlength='3' maxlength='160' placeholder='e.g. helpdesk.tickets.export'>" +
+              "<span class='bic-help'>Dot-separated hierarchical code (e.g. app.resource.action).</span>" +
+            "</div>" +
+            "<div class='bic-form-group'>" +
+              "<label class='bic-label' for='new-perm-desc'>Description</label>" +
+              "<textarea class='bic-control bic-textarea' id='new-perm-desc' maxlength='500' placeholder='Explain the specific capability governed by this permission'></textarea>" +
+            "</div>" +
+          "</div>" +
+          "<div class='bic-modal-footer'>" +
+            "<button type='button' class='bic-btn bic-btn-secondary' data-close-modal>Cancel</button>" +
+            "<button type='submit' class='bic-btn bic-btn-primary'>Create permission</button>" +
+          "</div>" +
+        "</form>" +
+      "</div>" +
+    "</div>";
+
+  document.querySelectorAll("[data-close-modal]").forEach((b) => b.onclick = closeModal);
+
+  $("new-perm-form").onsubmit = async (e) => {
+    e.preventDefault();
+    const body = {
+      application_code: $("new-perm-app").value,
+      code: $("new-perm-code").value.trim(),
+      description: $("new-perm-desc").value.trim() || null,
+    };
+    try {
+      await api("/v1/admin/permissions", { method: "POST", body: JSON.stringify(body) });
+      closeModal();
+      showToast("Permission created successfully");
+      await renderRBAC();
+    } catch (err) { showToast(err.message, true); }
+  };
+}
+
+async function deleteRole(roleId, roleName, isSystem) {
+  if (isSystem) {
+    alert("Core system roles (e.g. CENTRAL_SUPERADMIN) cannot be deleted.");
+    return;
+  }
+  if (!confirm("Are you sure you want to delete role '" + roleName + "'? All user assignments and granted permission links for this role will be removed.")) {
+    return;
+  }
+  try {
+    await api("/v1/admin/roles/" + roleId, { method: "DELETE" });
+    showToast("Role '" + roleName + "' deleted");
+    await renderRBAC();
+  } catch (err) { showToast(err.message, true); }
 }
 
 async function renderAudit() {
-  const logs = await api("/v1/admin/audit-logs");
-  $("section-audit").innerHTML = "<div class='bic-card bic-panel'><div class='bic-toolbar'><h3 class='bic-section-title'>Security-sensitive events</h3><span class='bic-muted'>Latest 100</span></div><div class='bic-table-wrap'><table class='bic-table bic-sortable'><thead><tr><th data-sort-type='date'>Time</th><th>Event</th><th>Application</th><th>Source IP</th></tr></thead><tbody>" + logs.map((log) => "<tr><td data-sort-value='" + esc(log.timestamp) + "'>" + new Date(log.timestamp).toLocaleString() + "</td><td><span class='bic-badge " + (log.event.includes("FAILED") ? "bic-badge-danger" : "bic-badge-success") + "'>" + esc(log.event) + "</span></td><td>" + esc(log.application || "—") + "</td><td>" + esc(log.source_ip || "—") + "</td></tr>").join("") + "</tbody></table></div></div>";
+  const [logs, applications] = await Promise.all([api("/v1/admin/audit-logs"), api("/v1/admin/applications")]);
+  const appOptions = "<option value=''>All Applications</option>" + applications.map((a) => "<option value='" + esc(a.code) + "'>" + esc(a.name) + "</option>").join("");
+
+  $("section-audit").innerHTML =
+    "<div class='bic-page-header'><div><p class='bic-kicker'>GOVERNANCE</p><h2 class='bic-page-title'>Audit log</h2><p class='bic-page-subtitle'>Immutable event ledger tracking logins, synchronization queries, and security actions.</p></div></div>" +
+    "<div class='bic-card bic-panel'>" +
+      "<div class='bic-table-toolbar'>" +
+        "<div class='bic-toolbar-filter-group'>" +
+          "<div class='bic-search-input-wrap'>" +
+            "<svg class='bic-search-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>" +
+            "<input class='bic-control bic-search-control' id='audit-search' type='search' placeholder='Search event, IP, metadata...' aria-label='Search audit logs'>" +
+          "</div>" +
+          "<select class='bic-select bic-filter-select' id='audit-app-filter' aria-label='Filter by application'>" + appOptions + "</select>" +
+        "</div>" +
+        "<div class='bic-toolbar-meta'><span class='bic-badge bic-badge-info'>" + logs.length + " events</span></div>" +
+      "</div>" +
+      "<div class='bic-table-wrap'><table class='bic-table bic-sortable'><thead><tr><th>Event</th><th>Application</th><th>Source IP</th><th data-sort-type='date'>Timestamp</th><th>Metadata</th></tr></thead><tbody id='audit-table-body'></tbody></table></div>" +
+    "</div>";
+
+  const renderAuditRows = () => {
+    const query = $("audit-search")?.value.trim().toLowerCase() || "";
+    const appFilter = $("audit-app-filter")?.value.trim().toLowerCase() || "";
+    const filtered = logs.filter((log) => {
+      const haystack = [log.event, log.application || "", log.source_ip || "", JSON.stringify(log.metadata || {})].join(" ").toLowerCase();
+      const matchQuery = !query || haystack.includes(query);
+      const matchApp = !appFilter || (log.application || "").toLowerCase() === appFilter;
+      return matchQuery && matchApp;
+    });
+
+    $("audit-table-body").innerHTML = filtered.length ? filtered.map((log) => {
+      const isSuccess = log.event.includes("SUCCESS") || log.event.includes("CREATED") || log.event.includes("UPDATED");
+      const isFailed = log.event.includes("FAILED") || log.event.includes("DELETED") || log.event.includes("DISABLED");
+      const badgeClass = isSuccess ? "bic-badge-success" : (isFailed ? "bic-badge-danger" : "bic-badge-info");
+      return "<tr>" +
+        "<td><span class='bic-badge " + badgeClass + "'>" + esc(log.event) + "</span></td>" +
+        "<td>" + (log.application ? "<span class='bic-app-tag'>" + esc(log.application) + "</span>" : "<span class='bic-muted'>—</span>") + "</td>" +
+        "<td><code>" + esc(log.source_ip || "—") + "</code></td>" +
+        "<td data-sort-value='" + esc(log.timestamp) + "'>" + new Date(log.timestamp).toLocaleString() + "</td>" +
+        "<td><pre class='bic-audit-metadata' style='margin:0;font-size:0.75rem;max-width:320px;overflow:hidden;text-overflow:ellipsis;'>" + esc(JSON.stringify(log.metadata || {})) + "</pre></td>" +
+      "</tr>";
+    }).join("") : "<tr><td colspan='5' class='bic-empty'>No audit logs matching query.</td></tr>";
+  };
+
+  $("audit-search").oninput = renderAuditRows;
+  $("audit-app-filter").onchange = renderAuditRows;
+  renderAuditRows();
   enableTableSorting($("section-audit"));
 }
 
-const showLoginMode = () => {
-  $("login-form").classList.remove("bic-hidden");
+function showForgotPasswordMode() {
+  $("login-form").classList.add("bic-hidden");
+  $("reset-password-form").classList.add("bic-hidden");
+  $("forgot-password-form").classList.remove("bic-hidden");
+  $("forgot-email").focus();
+}
+
+function showLoginMode() {
   $("forgot-password-form").classList.add("bic-hidden");
   $("reset-password-form").classList.add("bic-hidden");
-};
-const showForgotPasswordMode = () => {
-  $("login-form").classList.add("bic-hidden");
-  $("forgot-password-form").classList.remove("bic-hidden");
-  $("reset-password-form").classList.add("bic-hidden");
-  $("forgot-email").focus();
-};
-const showResetPasswordMode = () => {
+  $("login-form").classList.remove("bic-hidden");
+  $("login-error").textContent = "";
+  $("username").focus();
+}
+
+function showResetPasswordMode() {
+  $("login-view").classList.remove("bic-hidden");
+  $("portal-view").classList.add("bic-hidden");
   $("login-form").classList.add("bic-hidden");
   $("forgot-password-form").classList.add("bic-hidden");
   $("reset-password-form").classList.remove("bic-hidden");
   $("reset-password").focus();
-};
+}
 
 $("login-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   $("login-error").textContent = "";
   try {
-    const tokens = await api("/v1/auth/login", {method:"POST", body:JSON.stringify({username:$("username").value, password:$("password").value, application_code:"CENTRAL_AUTH"})});
+    const tokens = await api("/v1/auth/login", {
+      method: "POST",
+      body: JSON.stringify({
+        username: $("username").value,
+        password: $("password").value,
+        application_code: "CENTRAL_AUTH",
+      }),
+    });
     saveTokens(tokens);
     await loadPortal();
   } catch (error) { $("login-error").textContent = error.message; }
 });
+
 $("forgot-password-link").onclick = () => {
   $("forgot-password-message").textContent = "";
   showForgotPasswordMode();

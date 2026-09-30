@@ -1,83 +1,83 @@
 :root {
-  /* Brand - Balanced enterprise palette */
-  --bic-primary: #4361ee;
-  --bic-primary-hover: #374fc7;
-  --bic-primary-active: #2f44b0;
-  --bic-primary-soft: #eef2ff;
-  --bic-primary-soft-hover: #e0e7ff;
-  --bic-primary-text: #3538cd;
-  --bic-primary-border: #c7d2fe;
-  --bic-secondary: #0ea5e9;
-  --bic-secondary-hover: #0284c7;
-  --bic-secondary-soft: #f0f9ff;
-  --bic-accent: #059669;
+  /* Brand - Tabler.io signature palette */
+  --bic-primary: #206bc4;
+  --bic-primary-hover: #1a569d;
+  --bic-primary-active: #144177;
+  --bic-primary-soft: #eef4fc;
+  --bic-primary-soft-hover: #dfeaf9;
+  --bic-primary-text: #206bc4;
+  --bic-primary-border: #bcd5f5;
+  --bic-secondary: #667382;
+  --bic-secondary-hover: #54606e;
+  --bic-secondary-soft: #f6f8fb;
+  --bic-accent: #2fb344;
 
-  /* Status - Calibrated background to foreground brightness ratios */
-  --bic-success: #10b981;
-  --bic-success-hover: #059669;
-  --bic-success-soft: #ecfdf5;
-  --bic-success-text: #027a48;
-  --bic-success-border: #a7f3d0;
+  /* Status - Tabler.io status palette */
+  --bic-success: #2fb344;
+  --bic-success-hover: #269037;
+  --bic-success-soft: #ecfdf3;
+  --bic-success-text: #198754;
+  --bic-success-border: #bbf0cc;
 
-  --bic-warning: #f59e0b;
-  --bic-warning-hover: #d97706;
-  --bic-warning-soft: #fffbeb;
+  --bic-warning: #f59f00;
+  --bic-warning-hover: #d98d00;
+  --bic-warning-soft: #fef3d6;
   --bic-warning-text: #b45309;
   --bic-warning-border: #fde68a;
 
-  --bic-danger: #ef4444;
-  --bic-danger-hover: #dc2626;
-  --bic-danger-soft: #fef2f2;
+  --bic-danger: #d63939;
+  --bic-danger-hover: #b02a2a;
+  --bic-danger-soft: #fbe5e5;
   --bic-danger-text: #b91c1c;
-  --bic-danger-border: #fecaca;
+  --bic-danger-border: #f8c2c2;
 
-  --bic-info: #0ea5e9;
-  --bic-info-hover: #0284c7;
-  --bic-info-soft: #f0f9ff;
+  --bic-info: #4299e1;
+  --bic-info-hover: #3182ce;
+  --bic-info-soft: #e8f4fd;
   --bic-info-text: #0369a1;
-  --bic-info-border: #bae6fd;
+  --bic-info-border: #c2e2fa;
 
-  /* Neutral surfaces - Clean modern light surfaces */
-  --bic-bg-body: #f4f6f9;
+  /* Neutral surfaces - Tabler.io crisp light styling */
+  --bic-bg-body: #f6f8fb;
   --bic-bg-surface: #ffffff;
   --bic-bg-surface-muted: #f8fafc;
   --bic-bg-sidebar: #ffffff;
-  --bic-bg-sidebar-hover: #f1f5f9;
-  --bic-bg-sidebar-active: #4361ee;
+  --bic-bg-sidebar-hover: #f6f8fb;
+  --bic-bg-sidebar-active: #eef4fc;
   --bic-bg-muted: #f8fafc;
 
-  /* Text colors */
-  --bic-text-primary: #1e293b;
-  --bic-text-dark: #0f172a;
-  --bic-text-heading: #0f172a;
-  --bic-text-secondary: #475569;
-  --bic-text-muted: #64748b;
+  /* Text colors - Tabler slate text hierarchy */
+  --bic-text-primary: #182433;
+  --bic-text-dark: #182433;
+  --bic-text-heading: #182433;
+  --bic-text-secondary: #495665;
+  --bic-text-muted: #8b9cae;
   --bic-text-inverse: #ffffff;
-  --bic-text-sidebar: #334155;
-  --bic-text-sidebar-hover: #1e293b;
-  --bic-text-sidebar-active: #ffffff;
-  --bic-sidebar-link: #475569;
-  --bic-sidebar-link-hover: #1e293b;
-  --bic-sidebar-link-active: #ffffff;
+  --bic-text-sidebar: #495665;
+  --bic-text-sidebar-hover: #182433;
+  --bic-text-sidebar-active: #206bc4;
+  --bic-sidebar-link: #495665;
+  --bic-sidebar-link-hover: #182433;
+  --bic-sidebar-link-active: #206bc4;
 
-  /* Borders */
-  --bic-border: #e5eaef;
-  --bic-border-subtle: #f0f3f6;
-  --bic-border-strong: #dfe5ef;
-  --bic-border-focus: #5d87ff;
+  /* Borders - Tabler 1px subtle lines */
+  --bic-border: #e6e8ea;
+  --bic-border-subtle: #f0f2f5;
+  --bic-border-strong: #dce1e7;
+  --bic-border-focus: #206bc4;
 
-  /* Typography - Tailwind-Admin DM Sans font stack */
-  --bic-font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Typography - Tabler Inter font stack */
+  --bic-font-family: "Inter", -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
   --bic-font-size-xs: 0.75rem;     /* 12px */
   --bic-font-size-sm: 0.8125rem;   /* 13px */
   --bic-font-size-md: 0.875rem;    /* 14px */
-  --bic-font-size-base: 0.9375rem; /* 15px */
-  --bic-font-size-lg: 1.125rem;    /* 18px */
-  --bic-font-size-xl: 1.375rem;    /* 22px */
-  --bic-font-size-2xl: 1.75rem;    /* 28px */
-  --bic-line-height: 1.5;
+  --bic-font-size-base: 0.875rem;  /* 14px */
+  --bic-font-size-lg: 1rem;        /* 16px */
+  --bic-font-size-xl: 1.25rem;     /* 20px */
+  --bic-font-size-2xl: 1.5rem;     /* 24px */
+  --bic-line-height: 1.4285714;
 
-  /* Spacing: 4px scale */
+  /* Spacing: Tabler 4px/8px scale */
   --bic-space-1: 0.25rem;  /* 4px */
   --bic-space-2: 0.5rem;   /* 8px */
   --bic-space-3: 0.75rem;  /* 12px */
@@ -87,35 +87,35 @@
   --bic-space-8: 2rem;     /* 32px */
   --bic-space-10: 2.5rem;  /* 40px */
 
-  /* Shape / Radii - Tailwind-Admin signature geometry */
+  /* Shape / Radii - Tabler signature geometry (crisp 4px-8px) */
   --bic-radius-sm: 4px;
-  --bic-radius-md: 7px;
-  --bic-radius-lg: 10px;
-  --bic-radius-xl: 12px;
-  --bic-radius-2xl: 16px;
-  --bic-radius-pill: 9999px;
+  --bic-radius-md: 4px;
+  --bic-radius-lg: 6px;
+  --bic-radius-xl: 8px;
+  --bic-radius-2xl: 10px;
+  --bic-radius-pill: 50rem;
 
-  /* Shadows - Tailwind-Admin signature elevation */
-  --bic-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --bic-shadow-card: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
-  --bic-shadow-md: rgba(145, 158, 171, 0.2) 0px 0px 2px 0px, rgba(145, 158, 171, 0.12) 0px 12px 24px -4px;
-  --bic-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --bic-shadow-navbar: rgba(145, 158, 171, 0.12) 0px 2px 8px;
-  --bic-shadow-primary: 0 4px 12px rgba(93, 135, 255, 0.35);
-  --bic-shadow-danger: 0 4px 12px rgba(250, 137, 107, 0.35);
-  --bic-shadow-dropdown: 0 8px 24px rgba(145, 158, 171, 0.2);
+  /* Shadows - Tabler subtle elevation */
+  --bic-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --bic-shadow-card: rgba(24, 36, 51, 0.04) 0px 2px 4px 0px;
+  --bic-shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.04);
+  --bic-shadow-lg: 0 1rem 2rem rgba(0, 0, 0, 0.08);
+  --bic-shadow-navbar: rgba(24, 36, 51, 0.04) 0px 2px 4px;
+  --bic-shadow-primary: 0 0.25rem 0.75rem rgba(32, 107, 196, 0.2);
+  --bic-shadow-danger: 0 0.25rem 0.75rem rgba(214, 57, 57, 0.2);
+  --bic-shadow-dropdown: 0 0.5rem 1rem rgba(24, 36, 51, 0.08);
 
-  /* Layout Dimensions */
-  --bic-sidebar-width: 270px;
-  --bic-topbar-height: 64px;
-  --bic-content-max: 1600px;
-  --bic-auth-max-width: 440px;
-  --bic-control-height: 38px;
-  --bic-table-row-height: 48px;
+  /* Layout Dimensions - Tabler Navigation Grid */
+  --bic-sidebar-width: 240px;
+  --bic-topbar-height: 56px;
+  --bic-content-max: 1400px;
+  --bic-auth-max-width: 400px;
+  --bic-control-height: 36px;
+  --bic-table-row-height: 44px;
 
   /* Transitions */
   --bic-transition: 150ms ease-in-out;
-  --bic-backdrop: rgba(42, 53, 71, 0.45);
+  --bic-backdrop: rgba(24, 36, 51, 0.35);
 
   /* Semantic Aliases */
   --bic-color-primary: var(--bic-primary);
@@ -128,7 +128,7 @@
   --bic-color-text-muted: var(--bic-text-muted);
   --bic-color-border: var(--bic-border);
   --bic-color-border-strong: var(--bic-border-strong);
-  --bic-color-success: var(--bic-success);
+}  --bic-color-success: var(--bic-success);
   --bic-color-warning: var(--bic-warning);
   --bic-color-danger: var(--bic-danger);
   --bic-color-info: var(--bic-info);

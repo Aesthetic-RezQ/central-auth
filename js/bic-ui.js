@@ -2,34 +2,25 @@
   "use strict";
 
   document.addEventListener("click", function (event) {
-    const sidebarToggle = event.target.closest("[data-bic-toggle-sidebar]");
-    if (sidebarToggle) {
-      const sidebar = document.querySelector(".bic-sidebar");
-      if (sidebar) {
-        const open = sidebar.classList.toggle("is-open");
-        document.body.classList.toggle("bic-sidebar-open", open);
-        sidebarToggle.setAttribute("aria-expanded", String(open));
-        sidebarToggle.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
-        const label = sidebarToggle.querySelector(".bic-sr-only");
-        if (label) label.textContent = open ? "Close navigation" : "Open navigation";
-        let overlay = document.querySelector(".bic-sidebar-overlay");
-        if (open && !overlay) {
-          overlay = document.createElement("button");
-          overlay.type = "button";
-          overlay.className = "bic-sidebar-overlay";
-          overlay.setAttribute("aria-label", "Close navigation");
-          document.body.appendChild(overlay);
-        }
-        if (!open && overlay) overlay.remove();
+    const navToggle = event.target.closest("[data-bic-toggle-menu], [data-bic-toggle-sidebar]");
+    if (navToggle) {
+      const nav = document.querySelector(".bic-nav-horizontal, .bic-sidebar");
+      if (nav) {
+        const open = nav.classList.toggle("is-open");
+        document.body.classList.toggle("bic-nav-open", open);
+        navToggle.setAttribute("aria-expanded", String(open));
+        navToggle.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
       }
+      return;
     }
 
-    const sidebarOverlay = event.target.closest(".bic-sidebar-overlay");
-    if (sidebarOverlay) {
-      const sidebar = document.querySelector(".bic-sidebar");
-      sidebar?.classList.remove("is-open");
-      document.body.classList.remove("bic-sidebar-open");
-      sidebarOverlay.remove();
+    const navLink = event.target.closest(".bic-nav-link");
+    if (navLink) {
+      const nav = document.querySelector(".bic-nav-horizontal, .bic-sidebar");
+      if (nav && nav.classList.contains("is-open")) {
+        nav.classList.remove("is-open");
+        document.body.classList.remove("bic-nav-open");
+      }
     }
 
     const dropdownToggle = event.target.closest(".bic-dropdown-toggle, .bic-identity");
@@ -81,9 +72,8 @@
         d.classList.remove("is-open");
         d.querySelector(".bic-dropdown-toggle, .bic-identity")?.setAttribute("aria-expanded", "false");
       });
-      document.querySelector(".bic-sidebar")?.classList.remove("is-open");
-      document.body.classList.remove("bic-sidebar-open");
-      document.querySelector(".bic-sidebar-overlay")?.remove();
+      document.querySelector(".bic-nav-horizontal, .bic-sidebar")?.classList.remove("is-open");
+      document.body.classList.remove("bic-nav-open");
     }
   });
 })();

@@ -6,10 +6,11 @@ from slowapi.errors import RateLimitExceeded
 from sqlalchemy import select
 from .config import get_settings
 from .database import SessionLocal
-from .models import Application, Permission, Role, User
+from .models import ApiKey, Application, ApplicationRedirectUri, Group, Permission, Position, Role, SigningKey, User
+from .oidc.keys import get_or_create_active_signing_key
 from .rate_limit import limiter
-from .routers import admin, auth
-from .security import hash_password
+from .routers import admin, auth, oidc, organization
+from .security import hash_api_key, hash_password
 
 settings = get_settings()
 
@@ -25,6 +26,8 @@ APPLICATION_POLICIES = {
             "centralauth.roles.manage": "Create and manage roles",
             "centralauth.permissions.manage": "Create and manage permissions",
             "centralauth.audit.view": "View authentication audit logs",
+            "centralauth.organization.view": "View organization and hierarchy data",
+            "centralauth.organization.manage": "Manage divisions and positions",
         },
         "roles": {
             "CENTRAL_SUPERADMIN": (
@@ -36,18 +39,23 @@ APPLICATION_POLICIES = {
                 {
                     "centralauth.users.view", "centralauth.users.manage", "centralauth.users.delete",
                     "centralauth.password.reset", "centralauth.application_access.manage",
+                    "centralauth.organization.view",
                 },
             ),
             "RBAC_ADMIN": (
                 "Manage applications, roles, and permissions",
                 {
                     "centralauth.applications.manage", "centralauth.roles.manage",
-                    "centralauth.permissions.manage",
+                    "centralauth.permissions.manage", "centralauth.organization.manage",
                 },
             ),
             "AUDITOR": (
                 "Read directory and authentication audit information",
-                {"centralauth.users.view", "centralauth.audit.view"},
+                {"centralauth.users.view", "centralauth.audit.view", "centralauth.organization.view"},
+            ),
+            "HELPDESK_SERVICE": (
+                "Service integration role for Helpdesk synchronization",
+                {"centralauth.users.view", "centralauth.organization.view"},
             ),
         },
     },
@@ -136,23 +144,90 @@ APPLICATION_POLICIES = {
     },
 }
 
+DEFAULT_POSITIONS = [
+    ("STAFF", "Staff", 1, False, False, "Standard individual contributor employee"),
+    ("SUPERVISOR", "Supervisor", 2, False, False, "Operational supervisor"),
+    ("MANAGER", "Manager", 3, True, False, "Department or division manager"),
+    ("GENERAL_MANAGER", "General Manager", 4, True, True, "Executive General Manager"),
+]
+
+DEFAULT_GROUPS = [
+    ("IT", "Information Technology", "IT and infrastructure personnel"),
+    ("MANAGEMENT", "Management", "Company executive and managerial leadership"),
+    ("FINANCE", "Finance & Accounting", "Finance and accounting department"),
+    ("HR", "Human Resources", "HR and administration personnel"),
+    ("ENGINEERING", "Engineering", "Technical engineering and operations"),
+]
+
 def seed_defaults() -> None:
     db = SessionLocal()
     try:
+        # Initialize RSA signing key for RS256 token issuance
+        get_or_create_active_signing_key(db)
+
+        # Seed standard groups
+        for code, name, desc in DEFAULT_GROUPS:
+            if not db.scalar(select(Group).where(Group.code == code)):
+                db.add(Group(code=code, name=name, description=desc))
+        db.flush()
+
         defaults = [
-            ("CENTRAL_AUTH", "Central Authentication", "Administrative access to Central Auth"),
-            ("HELPDESK", "Helpdesk", "Internal helpdesk application"),
-            ("NMS", "Network Monitoring System", "Network monitoring application"),
-            ("INTRANET", "BIC Intranet", "BIC internal intranet"),
-            ("BIC_MAILER", "BIC Mailer", "BIC internal mail service"),
+            ("CENTRAL_AUTH", "Central Authentication", "Administrative access to Central Auth", "central_auth", "confidential", None),
+            ("HELPDESK", "Helpdesk", "Internal helpdesk application", "helpdesk", "confidential", hash_password("9UIdCYBcPVVx_yQZiugPimyUleVOW_NePdlfUExa9-w")),
+            ("NMS", "Network Monitoring System", "Network monitoring application", "nms", "confidential", hash_password("nms_secret_2026")),
+            ("INTRANET", "BIC Intranet", "BIC internal intranet", "intranet", "confidential", hash_password("intranet_secret_2026")),
+            ("BIC_MAILER", "BIC Mailer", "BIC internal mail service", "bic_mailer", "confidential", hash_password("mailer_secret_2026")),
         ]
-        deprecated = db.scalar(select(Application).where(Application.code == "ITMIS"))
-        if deprecated:
-            db.delete(deprecated)
-            db.flush()
-        for code, name, description in defaults:
-            if not db.scalar(select(Application).where(Application.code == code)):
-                db.add(Application(code=code, name=name, description=description))
+        for code, name, description, client_id, client_type, secret_hash in defaults:
+            app = db.scalar(select(Application).where(Application.code == code))
+            if not app:
+                app = Application(
+                    code=code,
+                    name=name,
+                    description=description,
+                    client_id=client_id,
+                    client_type=client_type,
+                    client_secret_hash=secret_hash,
+                )
+                db.add(app)
+            else:
+                if not app.client_id:
+                    app.client_id = client_id
+                if secret_hash:
+                    app.client_secret_hash = secret_hash
+        db.flush()
+
+        # Seed standard redirect URIs for client applications
+        DEFAULT_REDIRECT_URIS = {
+            "HELPDESK": [
+                "https://172.16.0.111:9444/auth/callback",
+                "http://172.16.0.111:9180/auth/callback",
+                "http://localhost:8081/auth/callback",
+                "https://172.16.0.111:9444/login",
+                "http://172.16.0.111:9180/login",
+            ],
+            "NMS": [
+                "http://172.16.0.111:8082/auth/callback",
+                "http://localhost:8082/auth/callback",
+            ],
+            "INTRANET": [
+                "http://172.16.0.111:8083/auth/callback",
+                "http://localhost:8083/auth/callback",
+            ],
+        }
+        for app_code, uris in DEFAULT_REDIRECT_URIS.items():
+            app = db.scalar(select(Application).where(Application.code == app_code))
+            if app:
+                for u in uris:
+                    if not db.scalar(select(ApplicationRedirectUri).where(ApplicationRedirectUri.application_id == app.id, ApplicationRedirectUri.redirect_uri == u)):
+                        db.add(ApplicationRedirectUri(application_id=app.id, redirect_uri=u))
+        db.flush()
+
+        # Seed standard positions
+        for code, name, level, is_mgr, is_gm, desc in DEFAULT_POSITIONS:
+            pos = db.scalar(select(Position).where(Position.code == code))
+            if not pos:
+                db.add(Position(code=code, name=name, level=level, is_manager=is_mgr, is_general_manager=is_gm, description=desc))
         db.flush()
 
         for application_code, policy in APPLICATION_POLICIES.items():
@@ -182,8 +257,24 @@ def seed_defaults() -> None:
                     permission = permissions[permission_code]
                     if permission not in role.permissions:
                         role.permissions.append(permission)
-        if not db.scalar(select(User).where(User.username == settings.default_admin_username)):
-            db.add(User(username=settings.default_admin_username, email=settings.default_admin_email, full_name=settings.default_admin_full_name, password_hash=hash_password(settings.default_admin_password), is_superadmin=True))
+
+        # Seed default admin user
+        admin_user = db.scalar(select(User).where(User.username == settings.default_admin_username))
+        if not admin_user:
+            gm_pos = db.scalar(select(Position).where(Position.code == "GENERAL_MANAGER"))
+            it_group = db.scalar(select(Group).where(Group.code == "IT"))
+            admin_user = User(
+                username=settings.default_admin_username,
+                email=settings.default_admin_email,
+                full_name=settings.default_admin_full_name,
+                employee_id="EMP00001",
+                password_hash=hash_password(settings.default_admin_password),
+                is_superadmin=True,
+                position_id=gm_pos.id if gm_pos else None,
+            )
+            if it_group:
+                admin_user.groups.append(it_group)
+            db.add(admin_user)
         db.flush()
 
         central_auth = db.scalar(select(Application).where(Application.code == "CENTRAL_AUTH"))
@@ -191,6 +282,20 @@ def seed_defaults() -> None:
         for superadmin in db.scalars(select(User).where(User.is_superadmin.is_(True))):
             if central_superadmin not in superadmin.roles:
                 superadmin.roles.append(central_superadmin)
+
+        # Seed default Helpdesk service API key if none exists
+        helpdesk_key = db.scalar(select(ApiKey).where(ApiKey.client_code == "HELPDESK"))
+        if not helpdesk_key:
+            default_key = "cas_helpdesk_service_key_2026"
+            db.add(ApiKey(
+                name="Helpdesk Integration Service Key",
+                client_code="HELPDESK",
+                key_prefix="cas_helpdes",
+                key_hash=hash_api_key(default_key),
+                scopes=["users:read", "organization:read"],
+                is_active=True,
+            ))
+
         db.commit()
     finally:
         db.close()
@@ -208,12 +313,27 @@ app.add_middleware(
     allow_origins=settings.cors_origin_list,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-Application-Code"],
+    allow_headers=["Authorization", "Content-Type", "X-Application-Code", "X-API-Key"],
 )
 
 @app.get("/health", tags=["system"])
 def health():
     return {"status": "ok", "service": settings.app_name}
+
+@app.get("/health/oidc", tags=["system"])
+def health_oidc():
+    db = SessionLocal()
+    try:
+        signing_key = get_or_create_active_signing_key(db)
+        return {
+            "status": "ok",
+            "oidc_issuer": settings.oidc_issuer,
+            "signing_key_id": signing_key.kid,
+            "signing_algorithm": signing_key.algorithm,
+            "sso_session_expire_hours": settings.sso_session_expire_hours,
+        }
+    finally:
+        db.close()
 
 @app.get("/ready", tags=["system"])
 def ready():
@@ -232,5 +352,7 @@ async def security_headers(request: Request, call_next):
     response.headers["Referrer-Policy"] = "no-referrer"
     return response
 
+app.include_router(oidc.router)
 app.include_router(auth.router)
+app.include_router(organization.router)
 app.include_router(admin.router)

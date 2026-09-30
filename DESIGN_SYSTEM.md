@@ -1,8 +1,8 @@
 # BIC Internal IT Web UI Framework
 
-Version: 3.0.0 (Tailwind-Admin Theme)
+Version: 4.0.0 (Tabler.io Enterprise Theme)
 
-Visual direction: Tailwind-Admin dashboard UI language ([Tailwind-Admin/free-tailwind-admin-dashboard-template](https://github.com/Tailwind-Admin/free-tailwind-admin-dashboard-template.git)), adapted to the BIC internal framework. The system features a clean light navigation rail, modern pastel stat cards, 12px rounded geometry, soft pill badges, responsive layouts, and glowing primary focus states without altering application workflows or backend endpoints.
+Visual direction: Standardized enterprise UI language modeled directly on [Tabler.io](https://tabler.io), adapted to the BIC internal application suite. The system features a clean 240px navigation sidebar, 56px minimalist topbar, 4px-6px subtle rounded geometry, Inter typography, soft pill badges, Tabler stamp metric cards, and responsive tables without altering application workflows or backend endpoints.
 
 This document is authoritative for all internal IT applications that use this UI framework.
 
@@ -12,19 +12,19 @@ All internal applications should look and behave as if they belong to the same c
 
 Priorities:
 
-1. Consistency
-2. Readability
+1. Consistency & Clean Modernity (Tabler.io standard)
+2. High Readability & Contrast
 3. Operational clarity
 4. Fast development
 5. Low maintenance
-6. Reusability
+6. Component Reusability
 
 ## 2. Mandatory AI Coding Rules
 
 When generating or modifying UI code:
 
 - Reuse the existing BIC UI classes before creating new styles.
-- Never create arbitrary brand colors.
+- Never create arbitrary brand colors. Use standard Tabler design tokens (`#206bc4` primary, `#f6f8fb` background, `#e6e8ea` border).
 - Never hard-code spacing, border radius, shadows, or primary colors when a design token already exists.
 - Never use inline styles for normal application UI.
 - Never duplicate component CSS inside individual pages.
@@ -34,46 +34,68 @@ When generating or modifying UI code:
 - Existing layout patterns must be preserved unless there is a functional reason to change them.
 - All pages must be usable at 1366x768 and responsive down to 768px.
 - Use semantic HTML where practical.
-- Maintain visible focus states for keyboard navigation.
+- Maintain visible focus states for keyboard navigation (`box-shadow: 0 0 0 0.25rem rgba(32, 107, 196, 0.25)`).
 - Dangerous actions must use the danger button style.
 - Status indicators must use standard badge colors.
 
-## 3. Standard Page Structure
+## 3. Standard Page Structure (Tabler Horizontal Navbar)
 
-Every authenticated application page should follow:
+Every authenticated application page follows:
 
-1. Sidebar
-2. Topbar
-3. Page header
-4. Content area
-5. Cards / tables / forms
+1. Top Navbar (`.bic-navbar` — 60px height, `#ffffff` surface, border `#e6e8ea`):
+   - Brand (`.bic-brand` with logo + title)
+   - Horizontal Navigation (`.bic-nav-horizontal` with `.bic-nav-link` items)
+   - User profile dropdown (`#identity`)
+2. Page header / subheader (`.bic-page-header-wrap` with kicker & `.bic-page-title`)
+3. Content area (`.bic-content` — `#f6f8fb` background, max-width 1400px centered)
+4. Cards / tables / forms
 
 Recommended HTML structure:
 
 ```html
 <div class="bic-app">
-  <aside class="bic-sidebar">...</aside>
+  <header class="bic-navbar">
+    <div class="bic-navbar-container">
+      <div class="bic-navbar-left">
+        <button class="bic-menu-toggle" type="button" aria-label="Toggle navigation" data-bic-toggle-menu>...</button>
+        <div class="bic-brand">...</div>
+      </div>
+      <nav class="bic-nav-horizontal">
+        <button class="bic-nav-link is-active" data-section="overview">...</button>
+        <button class="bic-nav-link" data-section="users">...</button>
+      </nav>
+      <div class="bic-navbar-right">
+        <div class="bic-dropdown">...</div>
+      </div>
+    </div>
+  </header>
 
   <main class="bic-main">
-    <header class="bic-topbar">...</header>
+    <div class="bic-page-header-wrap">
+      <div class="bic-page-header-container">
+        <div>
+          <p class="bic-kicker">CENTRAL AUTHENTICATION SERVICE</p>
+          <h2 class="bic-page-title">Overview</h2>
+        </div>
+      </div>
+    </div>
 
     <section class="bic-content">
-      <div class="bic-page-header">...</div>
       ...
     </section>
   </main>
 </div>
 ```
 
-## 4. Buttons
+## 4. Buttons (Tabler.io Style)
 
 Primary action:
 
 ```html
-<button class="bic-btn bic-btn-primary">Save</button>
+<button class="bic-btn bic-btn-primary">Save changes</button>
 ```
 
-Secondary:
+Secondary / Outline:
 
 ```html
 <button class="bic-btn bic-btn-secondary">Cancel</button>
@@ -82,120 +104,86 @@ Secondary:
 Danger:
 
 ```html
-<button class="bic-btn bic-btn-danger">Delete</button>
+<button class="bic-btn bic-btn-danger">Delete user</button>
 ```
 
-Do not create custom button colors unless a new global component state is approved.
+Small size:
+
+```html
+<button class="bic-btn bic-btn-secondary bic-btn-sm">Refresh</button>
+```
 
 ## 5. Forms
 
-Use:
+Use standard Tabler form classes:
 
 - `.bic-form-group`
 - `.bic-label`
-- `.bic-control`
-- `.bic-select`
+- `.bic-control` (Text inputs)
+- `.bic-select` (Custom styled dropdown select)
 - `.bic-textarea`
 - `.bic-help`
 
-Do not style individual `<input>` elements directly in page templates.
-
-## 6. Tables
-
-Use `.bic-table-wrap` and `.bic-table`.
-
-Tables should:
-
-- Keep header labels concise.
-- Put actions in the rightmost column.
-- Use badges for status.
-- Avoid excessive grid lines.
-- Use horizontal scrolling on smaller screens.
-
-## 7. Status Colors
-
-Use status colors only for operational meaning:
-
-- Green = healthy / success / active
-- Amber = warning / attention
-- Red = failed / critical / destructive
-- Blue = information / neutral operational state
-
-Do not use status colors decoratively.
-
-## 8. Cards
-
-Use `.bic-card`.
-
-Cards should group logically related information. Avoid nesting cards unless necessary.
-
-For dashboards, KPI cards should use `.bic-stat`.
-
-## 9. Navigation
-
-Sidebar items use `.bic-nav-link`.
-
-The current page must include `.is-active`.
-
-Group navigation with `.bic-nav-section` when the application has many modules.
-
-## 10. Spacing
-
-Spacing follows the global 4px scale from `bic-tokens.css`.
-
-Preferred values:
-
-- 8px for tight UI spacing
-- 12px for compact grouping
-- 16px for standard spacing
-- 24px for section spacing
-- 32px+ for major separation
-
-Do not introduce arbitrary values such as 17px, 23px, or 37px unless technically required.
-
-## 11. Typography
-
-Default:
-
-- Font: Inter / Segoe UI fallback
-- Body: 14px
-- Small: 13px
-- Labels/meta: 12px
-- Section titles: 18–24px
-- Page titles: 30px
-
-Avoid oversized marketing-style typography in internal operational systems.
-
-## 12. New Component Policy
-
-Before creating a new component:
-
-1. Check if an existing BIC component can be reused.
-2. If not, create a generic reusable component.
-3. Add its CSS to `bic-components.css`.
-4. Document its usage here if it becomes a common component.
-5. Do not create one-off styling in individual pages unless unavoidable.
-
-## 13. AI Prompt Template
-
-Use this at the beginning of future vibe-coding tasks:
-
-> This application uses the BIC Internal IT Web UI Framework.
-> Read and follow `DESIGN_SYSTEM.md`.
-> Reuse existing BIC classes from `/css`.
-> Do not invent a new design language.
-> Do not use inline CSS.
-> Do not hard-code colors, spacing, radius, or shadows when tokens exist.
-> If a reusable component is missing, add it to `bic-components.css`.
-> Preserve the standard sidebar, topbar, page header, card, table, form, badge, alert, and modal patterns.
-> The result must visually match the existing internal IT application suite.
-
-## 14. Versioning
-
-Applications should record the UI framework version in their README or application documentation.
-
 Example:
 
-`BIC Internal IT Web UI Framework: v1.0.0`
+```html
+<div class="bic-form-group">
+  <label class="bic-label" for="email">Email address</label>
+  <input class="bic-control" id="email" type="email" placeholder="user@bic.co.id" />
+  <div class="bic-help">Corporate email address.</div>
+</div>
+```
 
-Breaking visual changes should increment the major version.
+## 6. KPI Metric Cards (Tabler Stamps)
+
+```html
+<div class="bic-card bic-stat">
+  <div class="bic-stat-content">
+    <span class="bic-stat-label">Total users</span>
+    <strong class="bic-stat-value">128</strong>
+  </div>
+  <div class="bic-stat-icon-wrap bic-stat-icon-total">
+    <svg ...></svg>
+  </div>
+</div>
+```
+
+## 7. Badges & Status Indicators
+
+Pill badges with soft background and high contrast text:
+
+- `.bic-badge-success` (Active / Connected)
+- `.bic-badge-danger` (Disabled / Error)
+- `.bic-badge-warning` (Pending / Not configured)
+- `.bic-badge-info` (System / Meta)
+- `.bic-badge-primary` (Roles / Applications)
+
+```html
+<span class="bic-badge bic-badge-success">Active</span>
+<span class="bic-badge bic-badge-danger">Disabled</span>
+```
+
+## 8. Tables
+
+Clean enterprise data tables with sort headers and subtle hover states:
+
+```html
+<div class="bic-card bic-panel">
+  <div class="bic-table-wrap">
+    <table class="bic-table bic-sortable">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Division</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          ...
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+```

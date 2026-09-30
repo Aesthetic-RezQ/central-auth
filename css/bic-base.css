@@ -24,7 +24,7 @@ body {
 }
 
 ::selection {
-  color: var(--bic-text-inverse);
+  color: #ffffff;
   background: var(--bic-primary);
 }
 
@@ -34,21 +34,23 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  margin: 0 0 var(--bic-space-3);
-  color: var(--bic-text-primary);
+  margin: 0 0 var(--bic-space-2);
+  color: var(--bic-text-heading);
   font-weight: 600;
   line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
 h1 { font-size: var(--bic-font-size-2xl); font-weight: 700; }
 h2 { font-size: var(--bic-font-size-xl); font-weight: 600; }
 h3 { font-size: var(--bic-font-size-lg); font-weight: 600; }
-h4 { font-size: 16px; font-weight: 600; }
-h5 { font-size: var(--bic-font-size-md); font-weight: 600; }
-h6 { font-size: var(--bic-font-size-sm); font-weight: 600; }
+h4 { font-size: 0.875rem; font-weight: 600; }
+h5 { font-size: 0.8125rem; font-weight: 600; }
+h6 { font-size: 0.75rem; font-weight: 600; }
 
 p {
-  margin: 0 0 var(--bic-space-4);
+  margin: 0 0 var(--bic-space-3);
+  color: var(--bic-text-secondary);
 }
 
 a {

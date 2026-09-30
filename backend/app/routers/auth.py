@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 from ..audit import record_audit
@@ -10,6 +10,7 @@ from ..database import get_db
 from ..dependencies import current_user, ensure_application_access
 from ..email import send_password_reset_email
 from ..models import Application, PasswordResetToken, RefreshToken, User
+from ..oidc.session_service import create_sso_session, revoke_sso_session
 from ..schemas import ForgotPasswordRequest, LoginRequest, LogoutRequest, RefreshRequest, ResetPasswordRequest, TokenResponse
 from ..security import create_access_token, hash_password, hash_password_reset_token, hash_refresh_token, new_password_reset_token, new_refresh_token, verify_password
 from ..rate_limit import limiter
@@ -31,7 +32,7 @@ def issue_tokens(db: Session, user: User, application_code: str) -> TokenRespons
 
 @router.post("/login", response_model=TokenResponse)
 @limiter.limit("10/minute")
-async def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)):
+async def login(request: Request, response: Response, payload: LoginRequest, db: Session = Depends(get_db)):
     user = db.scalar(select(User).where(User.username == payload.username))
     app = db.scalar(select(Application).where(Application.code == payload.application_code, Application.status == "active"))
     valid = bool(user and verify_password(payload.password, user.password_hash) and user.status == "active" and app)
@@ -50,6 +51,7 @@ async def login(request: Request, payload: LoginRequest, db: Session = Depends(g
     record_audit(db, request, "LOGIN_SUCCESS", user_id=user.id, application=payload.application_code)
     db.commit()
     return result
+
 
 @router.post("/forgot-password")
 @limiter.limit("5/minute")
@@ -134,13 +136,14 @@ async def refresh(payload: RefreshRequest, request: Request, db: Session = Depen
     return result
 
 @router.post("/logout")
-async def logout(payload: LogoutRequest, request: Request, db: Session = Depends(get_db), user: User = Depends(current_user)):
+async def logout(payload: LogoutRequest, request: Request, response: Response, db: Session = Depends(get_db), user: User = Depends(current_user)):
     token = db.scalar(select(RefreshToken).where(RefreshToken.token_hash == hash_refresh_token(payload.refresh_token), RefreshToken.user_id == user.id))
     if token and not token.revoked_at:
         token.revoked_at = datetime.now(timezone.utc)
     record_audit(db, request, "LOGOUT", user_id=user.id)
     db.commit()
     return {"message": "Logged out"}
+
 
 @router.get("/me")
 async def me(user: User = Depends(current_user)):
